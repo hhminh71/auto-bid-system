@@ -12,9 +12,11 @@
     <!-- Babel (Biên dịch JSX trực tiếp trên trình duyệt) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- THƯ VIỆN XỬ LÝ WORD VÀ TẢI FILE (ĐÃ CẬP NHẬT NGUỒN ỔN ĐỊNH) -->
+    <!-- THƯ VIỆN XỬ LÝ WORD VÀ TẢI FILE -->
     <script src="https://unpkg.com/pizzip@3.1.7/dist/pizzip.js"></script>
     <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
+    <!-- THƯ VIỆN MỚI: DÙNG ĐỂ NÉN NHIỀU FILE THÀNH 1 FILE .ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -22,24 +24,31 @@
 
     <script type="text/babel">
         const App = () => {
+            // Mở rộng thêm một số trường dữ liệu để form sát thực tế hơn
             const [formData, setFormData] = React.useState({
                 tenDuAn: '',
                 chuDauTu: '',
                 tongMucDauTu: '',
                 tenGoiThau: '',
                 hinhThucLCNT: 'Chỉ định thầu rút gọn',
-                loaiHopDong: 'Trọn gói'
+                loaiHopDong: 'Trọn gói',
+                tenNhaThau: '', // Thêm mới
+                soQuyetDinhDA: '' // Thêm mới
             });
 
             const [isGenerating, setIsGenerating] = React.useState(false);
 
+            // NÂNG CẤP: Gắn kết tên biểu mẫu với tên file Word thật sự bạn sẽ tải lên GitHub
             const logicTree = {
                 'Chỉ định thầu rút gọn': [
-                    { id: 'tt1', name: '01. Tờ trình phê duyệt KHLCNT' }
+                    { id: 'tt1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
+                    { id: 'qd1', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' },
+                    { id: 'hd1', name: '03. Hợp đồng kinh tế', filename: '03_HopDong.docx' }
                 ],
                 'Đấu thầu rộng rãi': [
-                    { id: 'tt1', name: '01. Tờ trình phê duyệt KHLCNT' },
-                    { id: 'qd1', name: '02. Quyết định phê duyệt KHLCNT' }
+                    { id: 'tt1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
+                    { id: 'qd1', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' },
+                    { id: 'tcg', name: '03. Quyết định lập Tổ chuyên gia', filename: '03_LapToChuyenGia.docx' }
                 ]
             };
 
@@ -51,7 +60,7 @@
                 });
             };
 
-            // HÀM LÕI: Đọc file Word mẫu và trộn dữ liệu
+            // HÀM LÕI MỚI: Tải nhiều file, trộn dữ liệu, và nén thành ZIP
             const generateDocument = async () => {
                 if (!formData.tenDuAn || !formData.tenGoiThau) {
                     alert("Vui lòng nhập Tên dự án và Tên gói thầu trước khi xuất file!");
@@ -61,53 +70,59 @@
                 setIsGenerating(true);
 
                 try {
-                    // Kiểm tra xem thư viện đã tải xong chưa (Tránh lỗi PizZip is not defined)
-                    if (typeof window.PizZip === 'undefined') {
-                        throw new Error("Thư viện lõi (PizZip) chưa tải xong do kết nối mạng. Vui lòng tải lại trang (bấm F5) và thử lại!");
-                    }
-                    if (typeof window.docxtemplater === 'undefined') {
-                        throw new Error("Thư viện lõi (docxtemplater) chưa tải xong. Vui lòng tải lại trang (bấm F5) và thử lại!");
+                    // Kiểm tra thư viện nén ZIP
+                    if (typeof window.JSZip === 'undefined') {
+                        throw new Error("Thư viện JSZip chưa tải xong. Vui lòng F5 tải lại trang.");
                     }
 
-                    // 1. Tải file template.docx từ máy chủ (kho GitHub của bạn)
-                    const response = await fetch('./template.docx');
+                    const currentDocs = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
                     
-                    if (!response.ok) {
-                        throw new Error("Không tìm thấy file template.docx trên hệ thống. Đảm bảo bạn đã tải file template.docx lên GitHub và chờ Cloudflare cập nhật.");
-                    }
+                    // Tạo một hộp ZIP trống để chuẩn bị bỏ các file Word vào
+                    const zipArchive = new window.JSZip();
                     
-                    const arrayBuffer = await response.arrayBuffer();
+                    // Lặp qua từng file trong danh sách cần sinh ra
+                    let successCount = 0;
+                    for (const docInfo of currentDocs) {
+                        try {
+                            // 1. Tải file mẫu tương ứng
+                            const response = await fetch('./' + docInfo.filename);
+                            if (!response.ok) {
+                                console.warn(`Bỏ qua ${docInfo.filename} vì không tìm thấy trên server.`);
+                                continue; // Bỏ qua file này, tiếp tục tải file khác
+                            }
+                            const arrayBuffer = await response.arrayBuffer();
 
-                    // 2. Mở file Word (dạng nén zip) - Gọi đích danh từ window
-                    const zip = new window.PizZip(arrayBuffer);
+                            // 2. Mở file Word và trộn dữ liệu
+                            const zip = new window.PizZip(arrayBuffer);
+                            const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-                    // 3. Khởi tạo docxtemplater
-                    const doc = new window.docxtemplater(zip, {
-                        paragraphLoop: true,
-                        linebreaks: true,
-                    });
+                            doc.render(formData); // Bơm toàn bộ formData vào file Word
 
-                    // 4. Nhồi dữ liệu từ Form vào file Word
-                    doc.render({
-                        tenDuAn: formData.tenDuAn,
-                        chuDauTu: formData.chuDauTu,
-                        tongMucDauTu: formData.tongMucDauTu,
-                        tenGoiThau: formData.tenGoiThau,
-                        hinhThucLCNT: formData.hinhThucLCNT,
-                        loaiHopDong: formData.loaiHopDong
-                    });
+                            // 3. Đóng gói lại thành file Word đã hoàn thiện
+                            const docBlob = doc.getZip().generate({
+                                type: "blob",
+                                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            });
 
-                    // 5. Đóng gói lại thành file Word mới
-                    const out = doc.getZip().generate({
-                        type: "blob",
-                        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    });
+                            // 4. Bỏ file Word vừa trộn xong vào hộp ZIP tổng, đặt tên file rõ ràng
+                            zipArchive.file(`${docInfo.name}.docx`, docBlob);
+                            successCount++;
 
-                    // 6. Tải xuống máy tính người dùng
-                    saveAs(out, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}.docx`);
+                        } catch (err) {
+                            console.error(`Lỗi khi xử lý file ${docInfo.filename}:`, err);
+                        }
+                    }
+
+                    if (successCount === 0) {
+                        throw new Error("Không thể tạo được file nào. Vui lòng kiểm tra lại xem bạn đã tải các file Word mẫu (như 01_ToTrinh_KHLCNT.docx) lên GitHub chưa?");
+                    }
+
+                    // 5. Khóa hộp ZIP lại và tải xuống máy người dùng
+                    const content = await zipArchive.generateAsync({ type: "blob" });
+                    saveAs(content, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}.zip`);
                     
                 } catch (error) {
-                    console.error("Lỗi tạo file:", error);
+                    console.error("Lỗi tạo file ZIP:", error);
                     alert("Có lỗi xảy ra: " + error.message);
                 } finally {
                     setIsGenerating(false);
@@ -120,8 +135,8 @@
                 <div className="min-h-screen p-4 md:p-8">
                     <div className="max-w-6xl mx-auto">
                         <header className="mb-8 border-b pb-4 border-slate-200">
-                            <h1 className="text-3xl font-bold text-blue-900 tracking-tight">Hệ thống AutoBid</h1>
-                            <p className="text-slate-500 mt-1">Tự động hóa Hồ sơ Đấu thầu - Chạy trên Cloudflare</p>
+                            <h1 className="text-3xl font-bold text-blue-900 tracking-tight">Hệ thống AutoBid PRO</h1>
+                            <p className="text-slate-500 mt-1">Tự động hóa trộn đa biểu mẫu & Đóng gói ZIP</p>
                         </header>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -142,8 +157,8 @@
                                             <input type="text" name="chuDauTu" value={formData.chuDauTu} onChange={handleInputChange} placeholder="VD: UBND Huyện B" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Tổng mức đầu tư</label>
-                                            <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleInputChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ Phê duyệt Dự án</label>
+                                            <input type="text" name="soQuyetDinhDA" value={formData.soQuyetDinhDA} onChange={handleInputChange} placeholder="VD: 123/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
                                         </div>
                                     </div>
                                 </div>
@@ -168,12 +183,8 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Loại Hợp đồng</label>
-                                            <select name="loaiHopDong" value={formData.loaiHopDong} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white">
-                                                <option value="Trọn gói">Trọn gói</option>
-                                                <option value="Theo đơn giá cố định">Theo đơn giá cố định</option>
-                                                <option value="Theo đơn giá điều chỉnh">Theo đơn giá điều chỉnh</option>
-                                            </select>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu (dự kiến)</label>
+                                            <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
                                         </div>
                                     </div>
                                 </div>
@@ -182,19 +193,25 @@
                             {/* Cột phải: Xuất file */}
                             <div className="lg:col-span-1 space-y-6">
                                 <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                                    <h3 className="font-bold text-blue-900 mb-2">Trộn thư & Xuất file</h3>
-                                    <p className="text-sm text-blue-700 mb-4">Hệ thống sẽ lấy dữ liệu bạn vừa nhập ghép vào file <strong>template.docx</strong> có trên máy chủ.</p>
+                                    <h3 className="font-bold text-blue-900 mb-2">Đóng gói Hồ sơ</h3>
+                                    <p className="text-sm text-blue-700 mb-4">Hệ thống sẽ trộn dữ liệu vào <strong>{currentDocs.length} biểu mẫu</strong> và nén thành 1 file .ZIP cho bạn tải về.</p>
                                     
+                                    <ul className="text-xs text-blue-800 mb-6 space-y-1">
+                                        {currentDocs.map(doc => (
+                                            <li key={doc.id}>✓ {doc.name}</li>
+                                        ))}
+                                    </ul>
+
                                     <button 
                                         onClick={generateDocument}
                                         disabled={isGenerating}
                                         className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center ${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                                     >
-                                        {isGenerating ? 'Đang tạo file...' : 'Tạo File Word Tự Động'}
+                                        {isGenerating ? 'Đang tạo & nén ZIP...' : `Xuất File .ZIP Hồ Sơ`}
                                     </button>
                                 </div>
                                 <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 text-sm text-amber-800">
-                                    <strong>💡 Lưu ý quan trọng:</strong> Để chức năng này hoạt động, bạn phải đảm bảo đã tải file có tên <code>template.docx</code> lên cùng kho GitHub chứa file này!
+                                    <strong>💡 Nhiệm vụ của bạn:</strong> Cần đổi tên các file mẫu Word của bạn thành <code>01_ToTrinh_KHLCNT.docx</code>, <code>02_QuyetDinh_KHLCNT.docx</code>... và up lên GitHub để chức năng này hoạt động!
                                 </div>
                             </div>
                         </div>
