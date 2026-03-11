@@ -12,10 +12,10 @@
     <!-- Babel (Biên dịch JSX trực tiếp trên trình duyệt) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- THƯ VIỆN XỬ LÝ WORD VÀ TẢI FILE -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- THƯ VIỆN XỬ LÝ WORD VÀ TẢI FILE (ĐÃ CẬP NHẬT NGUỒN ỔN ĐỊNH) -->
+    <script src="https://unpkg.com/pizzip@3.1.7/dist/pizzip.js"></script>
+    <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
     <div id="root"></div>
@@ -61,18 +61,25 @@
                 setIsGenerating(true);
 
                 try {
+                    // Kiểm tra xem thư viện đã tải xong chưa (Tránh lỗi PizZip is not defined)
+                    if (typeof window.PizZip === 'undefined') {
+                        throw new Error("Thư viện lõi (PizZip) chưa tải xong do kết nối mạng. Vui lòng tải lại trang (bấm F5) và thử lại!");
+                    }
+                    if (typeof window.docxtemplater === 'undefined') {
+                        throw new Error("Thư viện lõi (docxtemplater) chưa tải xong. Vui lòng tải lại trang (bấm F5) và thử lại!");
+                    }
+
                     // 1. Tải file template.docx từ máy chủ (kho GitHub của bạn)
-                    // Lưu ý: Đường dẫn này giả định file template.docx nằm cùng cấp với index.html
                     const response = await fetch('./template.docx');
                     
                     if (!response.ok) {
-                        throw new Error("Không tìm thấy file template.docx trên hệ thống. Vui lòng kiểm tra lại Bước 2 trên GitHub.");
+                        throw new Error("Không tìm thấy file template.docx trên hệ thống. Đảm bảo bạn đã tải file template.docx lên GitHub và chờ Cloudflare cập nhật.");
                     }
                     
                     const arrayBuffer = await response.arrayBuffer();
 
-                    // 2. Mở file Word (dạng nén zip)
-                    const zip = new PizZip(arrayBuffer);
+                    // 2. Mở file Word (dạng nén zip) - Gọi đích danh từ window
+                    const zip = new window.PizZip(arrayBuffer);
 
                     // 3. Khởi tạo docxtemplater
                     const doc = new window.docxtemplater(zip, {
