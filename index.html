@@ -23,8 +23,52 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // --- HÀM HỖ TRỢ: ĐỌC SỐ TIỀN THÀNH CHỮ TIẾNG VIỆT ---
+        const docTien = (so) => {
+            if (!so) return '';
+            let str = parseInt(so.replace(/\D/g, '')).toString();
+            if (str === 'NaN' || str === '0') return 'Không đồng';
+            
+            const chuSo = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+            const tien = ["", "nghìn", "triệu", "tỷ", "nghìn tỷ", "triệu tỷ"];
+            let count = 0;
+            let result = "";
+            let rs = "";
+            
+            while (str.length > 0) {
+                let len = str.length;
+                let soPhanGhi = str.substring(Math.max(0, len - 3), len);
+                str = str.substring(0, Math.max(0, len - 3));
+                let num = parseInt(soPhanGhi);
+                
+                if (num > 0) {
+                    let tram = Math.floor(num / 100);
+                    let chuc = Math.floor((num % 100) / 10);
+                    let donVi = num % 10;
+                    rs = "";
+                    
+                    if (str.length > 0 || tram > 0) { 
+                        rs += chuSo[tram] + " trăm ";
+                        if (chuc === 0 && donVi > 0) rs += "lẻ ";
+                    }
+                    if (chuc === 1) rs += "mười ";
+                    else if (chuc > 1) rs += chuSo[chuc] + " mươi ";
+                    
+                    if (donVi === 1 && chuc > 1) rs += "mốt ";
+                    else if (donVi === 5 && chuc > 0) rs += "lăm ";
+                    else if (donVi > 0) rs += chuSo[donVi] + " ";
+                    
+                    result = rs.trim() + " " + tien[count] + " " + result;
+                } else if (count === 3 && result.trim() !== "") { 
+                    result = tien[count] + " " + result;
+                }
+                count++;
+            }
+            result = result.replace(/\s+/g, ' ').trim();
+            return result.charAt(0).toUpperCase() + result.slice(1) + " đồng chẵn";
+        };
+
         const App = () => {
-            // Mở rộng thêm một số trường dữ liệu để form sát thực tế hơn
             const [formData, setFormData] = React.useState({
                 tenDuAn: '',
                 chuDauTu: '',
@@ -32,13 +76,13 @@
                 tenGoiThau: '',
                 hinhThucLCNT: 'Chỉ định thầu rút gọn',
                 loaiHopDong: 'Trọn gói',
-                tenNhaThau: '', // Thêm mới
-                soQuyetDinhDA: '' // Thêm mới
+                tenNhaThau: '', 
+                soQuyetDinhDA: '' 
             });
 
             const [isGenerating, setIsGenerating] = React.useState(false);
+            const fileInputRef = React.useRef(null);
 
-            // NÂNG CẤP: Gắn kết tên biểu mẫu với tên file Word thật sự bạn sẽ tải lên GitHub
             const logicTree = {
                 'Chỉ định thầu rút gọn': [
                     { id: 'tt1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
@@ -60,7 +104,45 @@
                 });
             };
 
-            // HÀM LÕI MỚI: Tải nhiều file, trộn dữ liệu, và nén thành ZIP
+            // HÀM XỬ LÝ NHẬP SỐ TIỀN: Tự động thêm dấu chấm
+            const handleNumberChange = (e) => {
+                const { name, value } = e.target;
+                let rawValue = value.replace(/\D/g, ''); // Xóa chữ, chỉ giữ số
+                let formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, "."); // Thêm dấu chấm
+                setFormData({
+                    ...formData,
+                    [name]: formattedValue
+                });
+            };
+
+            // HÀM XUẤT DỮ LIỆU RA FILE .JSON
+            const handleExportData = () => {
+                const dataStr = JSON.stringify(formData, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const fileName = formData.tenGoiThau ? `DuLieu_${formData.tenGoiThau.replace(/\s+/g, '_')}.json` : 'DuLieu_ChuaDatTen.json';
+                saveAs(blob, fileName);
+            };
+
+            // HÀM NHẬP DỮ LIỆU TỪ FILE .JSON
+            const handleImportData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        setFormData({ ...formData, ...importedData });
+                        alert("Đã nhập dữ liệu thành công!");
+                    } catch (err) {
+                        alert("Lỗi! File không đúng định dạng. Vui lòng chọn file .json bạn đã lưu trước đó.");
+                    }
+                };
+                reader.readAsText(file);
+                // Reset file input để có thể chọn lại cùng 1 file nếu cần
+                e.target.value = null; 
+            };
+
             const generateDocument = async () => {
                 if (!formData.tenDuAn || !formData.tenGoiThau) {
                     alert("Vui lòng nhập Tên dự án và Tên gói thầu trước khi xuất file!");
@@ -70,41 +152,36 @@
                 setIsGenerating(true);
 
                 try {
-                    // Kiểm tra thư viện nén ZIP
                     if (typeof window.JSZip === 'undefined') {
                         throw new Error("Thư viện JSZip chưa tải xong. Vui lòng F5 tải lại trang.");
                     }
 
                     const currentDocs = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
-                    
-                    // Tạo một hộp ZIP trống để chuẩn bị bỏ các file Word vào
                     const zipArchive = new window.JSZip();
-                    
-                    // Lặp qua từng file trong danh sách cần sinh ra
                     let successCount = 0;
+                    
                     for (const docInfo of currentDocs) {
                         try {
-                            // 1. Tải file mẫu tương ứng
                             const response = await fetch('./' + docInfo.filename);
                             if (!response.ok) {
                                 console.warn(`Bỏ qua ${docInfo.filename} vì không tìm thấy trên server.`);
-                                continue; // Bỏ qua file này, tiếp tục tải file khác
+                                continue; 
                             }
                             const arrayBuffer = await response.arrayBuffer();
-
-                            // 2. Mở file Word và trộn dữ liệu
                             const zip = new window.PizZip(arrayBuffer);
                             const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-                            doc.render(formData); // Bơm toàn bộ formData vào file Word
+                            // Bổ sung thêm biến "tongMucDauTuBangChu" khi xuất file Word
+                            doc.render({
+                                ...formData,
+                                tongMucDauTuBangChu: docTien(formData.tongMucDauTu)
+                            }); 
 
-                            // 3. Đóng gói lại thành file Word đã hoàn thiện
                             const docBlob = doc.getZip().generate({
                                 type: "blob",
                                 mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             });
 
-                            // 4. Bỏ file Word vừa trộn xong vào hộp ZIP tổng, đặt tên file rõ ràng
                             zipArchive.file(`${docInfo.name}.docx`, docBlob);
                             successCount++;
 
@@ -117,7 +194,6 @@
                         throw new Error("Không thể tạo được file nào. Vui lòng kiểm tra lại xem bạn đã tải các file Word mẫu (như 01_ToTrinh_KHLCNT.docx) lên GitHub chưa?");
                     }
 
-                    // 5. Khóa hộp ZIP lại và tải xuống máy người dùng
                     const content = await zipArchive.generateAsync({ type: "blob" });
                     saveAs(content, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}.zip`);
                     
@@ -134,9 +210,36 @@
             return (
                 <div className="min-h-screen p-4 md:p-8">
                     <div className="max-w-6xl mx-auto">
-                        <header className="mb-8 border-b pb-4 border-slate-200">
-                            <h1 className="text-3xl font-bold text-blue-900 tracking-tight">Hệ thống AutoBid PRO</h1>
-                            <p className="text-slate-500 mt-1">Tự động hóa trộn đa biểu mẫu & Đóng gói ZIP</p>
+                        <header className="mb-6 border-b pb-4 border-slate-200 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-blue-900 tracking-tight">Hệ thống AutoBid PRO</h1>
+                                <p className="text-slate-500 mt-1">Tự động hóa trộn đa biểu mẫu & Đóng gói ZIP</p>
+                            </div>
+                            
+                            {/* CỤM NÚT CÔNG CỤ XUẤT/NHẬP DỮ LIỆU */}
+                            <div className="flex space-x-3">
+                                <input 
+                                    type="file" 
+                                    accept=".json" 
+                                    ref={fileInputRef} 
+                                    onChange={handleImportData} 
+                                    className="hidden" 
+                                />
+                                <button 
+                                    onClick={() => fileInputRef.current.click()}
+                                    className="bg-white border border-slate-300 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 font-medium py-2 px-4 rounded-lg shadow-sm flex items-center transition-all text-sm"
+                                >
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    Nhập dữ liệu
+                                </button>
+                                <button 
+                                    onClick={handleExportData}
+                                    className="bg-white border border-slate-300 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 font-medium py-2 px-4 rounded-lg shadow-sm flex items-center transition-all text-sm"
+                                >
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4 4l-4-4m0 0l-4-4m4 4V4"></path></svg>
+                                    Lưu dữ liệu
+                                </button>
+                            </div>
                         </header>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -183,6 +286,26 @@
                                             </select>
                                         </div>
                                         <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Loại Hợp đồng</label>
+                                            <select name="loaiHopDong" value={formData.loaiHopDong} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white">
+                                                <option value="Trọn gói">Trọn gói</option>
+                                                <option value="Theo đơn giá cố định">Theo đơn giá cố định</option>
+                                                <option value="Theo đơn giá điều chỉnh">Theo đơn giá điều chỉnh</option>
+                                            </select>
+                                        </div>
+                                        <div className="col-span-1 md:col-span-2 border-t border-slate-100 mt-2 pt-4">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Tổng mức đầu tư (Giá trị gói thầu) - VNĐ</label>
+                                            {/* SỬ DỤNG HÀM XỬ LÝ NHẬP SỐ */}
+                                            <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleNumberChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 font-semibold text-blue-900 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                            
+                                            {/* HIỂN THỊ CHỮ TỰ ĐỘNG */}
+                                            {formData.tongMucDauTu && (
+                                                <p className="text-sm text-blue-700 mt-2 italic bg-blue-50 p-2 rounded">
+                                                    <strong>Bằng chữ:</strong> {docTien(formData.tongMucDauTu)}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="col-span-1 md:col-span-2">
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu (dự kiến)</label>
                                             <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
                                         </div>
@@ -211,7 +334,7 @@
                                     </button>
                                 </div>
                                 <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 text-sm text-amber-800">
-                                    <strong>💡 Nhiệm vụ của bạn:</strong> Cần đổi tên các file mẫu Word của bạn thành <code>01_ToTrinh_KHLCNT.docx</code>, <code>02_QuyetDinh_KHLCNT.docx</code>... và up lên GitHub để chức năng này hoạt động!
+                                    <strong>💡 Cập nhật mới:</strong> Khi làm file Word mẫu, bạn có thể gõ biến <code>{'{tongMucDauTuBangChu}'}</code>, hệ thống sẽ tự chèn phần dịch ra chữ vào văn bản cho bạn!
                                 </div>
                             </div>
                         </div>
