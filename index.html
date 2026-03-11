@@ -68,16 +68,37 @@
             return result.charAt(0).toUpperCase() + result.slice(1) + " đồng chẵn";
         };
 
+        // --- HÀM HỖ TRỢ 2: XỬ LÝ NGÀY THÁNG ĐỊNH DẠNG VIỆT NAM ---
+        const formatNgay = (dateStr, type = 'full') => {
+            if (!dateStr) return '...'; // Nếu chưa chọn ngày thì để dấu 3 chấm
+            const [year, month, day] = dateStr.split('-');
+            
+            if (type === 'full') return `ngày ${day} tháng ${month} năm ${year}`;
+            if (type === 'short') return `${day}/${month}/${year}`;
+            if (type === 'd') return day;
+            if (type === 'm') return month;
+            if (type === 'y') return year;
+            return dateStr;
+        };
+
         const App = () => {
+            // BƯỚC 1: KHAI BÁO BIẾN MỚI Ở ĐÂY
             const [formData, setFormData] = React.useState({
                 tenDuAn: '',
                 chuDauTu: '',
+                nguonVon: '', 
                 tongMucDauTu: '',
+                soQuyetDinhDA: '',
                 tenGoiThau: '',
                 hinhThucLCNT: 'Chỉ định thầu rút gọn',
                 loaiHopDong: 'Trọn gói',
-                tenNhaThau: '', 
-                soQuyetDinhDA: '' 
+                thoiGianThucHien: '', 
+                tenNhaThau: '',
+                // THÊM BIẾN MỚI CHO VĂN BẢN VÀ NGÀY THÁNG
+                soToTrinh: '',
+                ngayToTrinh: '',
+                soQuyetDinh: '',
+                ngayQuyetDinh: ''
             });
 
             const [isGenerating, setIsGenerating] = React.useState(false);
@@ -171,11 +192,27 @@
                             const zip = new window.PizZip(arrayBuffer);
                             const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-                            // Bổ sung thêm biến "tongMucDauTuBangChu" khi xuất file Word
-                            doc.render({
+                            // TÍNH TOÁN CÁC BIẾN PHÁI SINH TRƯỚC KHI TRỘN VÀO WORD
+                            const dataToRender = {
                                 ...formData,
-                                tongMucDauTuBangChu: docTien(formData.tongMucDauTu)
-                            }); 
+                                tongMucDauTuBangChu: docTien(formData.tongMucDauTu),
+                                
+                                // Phân tách Ngày Tờ Trình
+                                ngayToTrinhFull: formatNgay(formData.ngayToTrinh, 'full'),
+                                ngayToTrinhShort: formatNgay(formData.ngayToTrinh, 'short'),
+                                ngayToTrinh_d: formatNgay(formData.ngayToTrinh, 'd'),
+                                ngayToTrinh_m: formatNgay(formData.ngayToTrinh, 'm'),
+                                ngayToTrinh_y: formatNgay(formData.ngayToTrinh, 'y'),
+
+                                // Phân tách Ngày Quyết định
+                                ngayQuyetDinhFull: formatNgay(formData.ngayQuyetDinh, 'full'),
+                                ngayQuyetDinhShort: formatNgay(formData.ngayQuyetDinh, 'short'),
+                                ngayQuyetDinh_d: formatNgay(formData.ngayQuyetDinh, 'd'),
+                                ngayQuyetDinh_m: formatNgay(formData.ngayQuyetDinh, 'm'),
+                                ngayQuyetDinh_y: formatNgay(formData.ngayQuyetDinh, 'y')
+                            };
+
+                            doc.render(dataToRender); 
 
                             const docBlob = doc.getZip().generate({
                                 type: "blob",
@@ -259,6 +296,11 @@
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Chủ đầu tư</label>
                                             <input type="text" name="chuDauTu" value={formData.chuDauTu} onChange={handleInputChange} placeholder="VD: UBND Huyện B" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
                                         </div>
+                                        {/* BƯỚC 2 & 3: Ô NHẬP LIỆU "NGUỒN VỐN" VỪA ĐƯỢC THÊM VÀO ĐÂY */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Nguồn vốn</label>
+                                            <input type="text" name="nguonVon" value={formData.nguonVon} onChange={handleInputChange} placeholder="VD: Ngân sách nhà nước" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                        </div>
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ Phê duyệt Dự án</label>
                                             <input type="text" name="soQuyetDinhDA" value={formData.soQuyetDinhDA} onChange={handleInputChange} placeholder="VD: 123/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
@@ -293,12 +335,15 @@
                                                 <option value="Theo đơn giá điều chỉnh">Theo đơn giá điều chỉnh</option>
                                             </select>
                                         </div>
+                                        {/* BƯỚC 2 & 3: Ô NHẬP LIỆU "THỜI GIAN THỰC HIỆN" VỪA ĐƯỢC THÊM VÀO ĐÂY */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Thời gian thực hiện (ngày)</label>
+                                            <input type="text" name="thoiGianThucHien" value={formData.thoiGianThucHien} onChange={handleInputChange} placeholder="VD: 120" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                        </div>
+                                        
                                         <div className="col-span-1 md:col-span-2 border-t border-slate-100 mt-2 pt-4">
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Tổng mức đầu tư (Giá trị gói thầu) - VNĐ</label>
-                                            {/* SỬ DỤNG HÀM XỬ LÝ NHẬP SỐ */}
                                             <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleNumberChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 font-semibold text-blue-900 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                            
-                                            {/* HIỂN THỊ CHỮ TỰ ĐỘNG */}
                                             {formData.tongMucDauTu && (
                                                 <p className="text-sm text-blue-700 mt-2 italic bg-blue-50 p-2 rounded">
                                                     <strong>Bằng chữ:</strong> {docTien(formData.tongMucDauTu)}
@@ -308,6 +353,37 @@
                                         <div className="col-span-1 md:col-span-2">
                                             <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu (dự kiến)</label>
                                             <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Box 3: Thông tin Văn bản (Căn cứ) */}
+                                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                    <h2 className="text-xl font-semibold mb-4 text-slate-700 flex items-center">
+                                        <span className="bg-purple-100 text-purple-800 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">3</span>
+                                        Thông tin Văn bản liên quan (Căn cứ)
+                                    </h2>
+                                    <p className="text-sm text-slate-500 mb-4">Nhập các thông tin này để làm "Căn cứ pháp lý" cho các văn bản sinh ra phía sau.</p>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Tờ trình */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Số Tờ trình KHLCNT</label>
+                                            <input type="text" name="soToTrinh" value={formData.soToTrinh} onChange={handleInputChange} placeholder="VD: 15/TTr-BQL" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Tờ trình</label>
+                                            <input type="date" name="ngayToTrinh" value={formData.ngayToTrinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
+                                        </div>
+
+                                        {/* Quyết định */}
+                                        <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ phê duyệt KHLCNT</label>
+                                            <input type="text" name="soQuyetDinh" value={formData.soQuyetDinh} onChange={handleInputChange} placeholder="VD: 128/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                        </div>
+                                        <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Quyết định</label>
+                                            <input type="date" name="ngayQuyetDinh" value={formData.ngayQuyetDinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
                                         </div>
                                     </div>
                                 </div>
