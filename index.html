@@ -70,7 +70,7 @@
 
         // --- HÀM HỖ TRỢ 2: XỬ LÝ NGÀY THÁNG ĐỊNH DẠNG VIỆT NAM ---
         const formatNgay = (dateStr, type = 'full') => {
-            if (!dateStr) return '...'; // Nếu chưa chọn ngày thì để dấu 3 chấm
+            if (!dateStr) return '...'; 
             const [year, month, day] = dateStr.split('-');
             
             if (type === 'full') return `ngày ${day} tháng ${month} năm ${year}`;
@@ -90,12 +90,13 @@
                 tongMucDauTu: '',
                 soQuyetDinhDA: '',
                 tenGoiThau: '',
-                hinhThucLCNT: 'Chỉ định thầu rút gọn', // Giá trị này điều khiển toàn bộ form
+                hinhThucLCNT: 'Chỉ định thầu rút gọn', 
+                buocLCNT: 'Bước chuẩn bị', // Biến mới quản lý Bước
                 loaiHopDong: 'Trọn gói',
                 thoiGianThucHien: '', 
-                tenNhaThau: '', // Dành cho Chỉ định thầu
-                phuongThucLCNT: 'Một giai đoạn một túi hồ sơ', // Dành cho đấu thầu rộng rãi
-                soTienDamBaoDuThau: '', // Dành cho đấu thầu rộng rãi
+                tenNhaThau: '', 
+                phuongThucLCNT: 'Một giai đoạn một túi hồ sơ', 
+                soTienDamBaoDuThau: '', 
                 soToTrinh: '',
                 ngayToTrinh: '',
                 soQuyetDinh: '',
@@ -105,18 +106,59 @@
             const [isGenerating, setIsGenerating] = React.useState(false);
             const fileInputRef = React.useRef(null);
 
+            // MA TRẬN LOGIC (HÌNH THỨC x BƯỚC)
             const logicTree = {
-                'Chỉ định thầu rút gọn': [
-                    { id: 'tt1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
-                    { id: 'qd1', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' },
-                    { id: 'hd1', name: '03. Hợp đồng kinh tế', filename: '03_HopDong.docx' }
-                ],
-                'Đấu thầu rộng rãi': [
-                    { id: 'tt1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
-                    { id: 'qd1', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' },
-                    { id: 'tcg', name: '03. Quyết định lập Tổ chuyên gia', filename: '03_LapToChuyenGia.docx' }
-                ]
+                'Dưới 50 triệu': {
+                    'Bước chuẩn bị': [{ id: 'd50_1', name: '01. Quyết định mua sắm', filename: '01_QD_MuaSam.docx' }],
+                    'Bước thực hiện': [
+                        { id: 'd50_2', name: '02. Biên bản nghiệm thu', filename: '02_BB_NghiemThu.docx' },
+                        { id: 'd50_3', name: '03. Thanh lý hợp đồng', filename: '03_ThanhLy.docx' },
+                        { id: 'd50_4', name: '04. Hợp đồng mua bán', filename: '04_HopDongMuaBan.docx' }
+                    ]
+                },
+                'Chào giá hạn chế': {
+                    'Bước chuẩn bị': [{ id: 'cghc_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' }],
+                    'Bước thực hiện': [
+                        { id: 'cghc_2', name: '02. Báo cáo đánh giá báo giá', filename: '02_BaoCaoDanhGia.docx' },
+                        { id: 'cghc_3', name: '03. Quyết định phê duyệt KQ LCNT', filename: '03_QD_KQLCNT.docx' },
+                        { id: 'cghc_4', name: '04. Hợp đồng', filename: '04_HopDong.docx' }
+                    ]
+                },
+                'Chào giá rộng rãi': {
+                    'Bước chuẩn bị': [{ id: 'cgrr_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' }],
+                    'Bước thực hiện': [
+                        { id: 'cgrr_2', name: '02. Báo cáo đánh giá E-HSQT', filename: '02_BaoCaoDanhGia.docx' },
+                        { id: 'cgrr_3', name: '03. Quyết định phê duyệt KQ', filename: '03_QD_KQLCNT.docx' },
+                        { id: 'cgrr_4', name: '04. Hợp đồng', filename: '04_HopDong.docx' }
+                    ]
+                },
+                'Chỉ định thầu rút gọn': {
+                    'Bước chuẩn bị': [
+                        { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
+                        { id: 'cdtrg_2', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' }
+                    ],
+                    'Bước thực hiện': [
+                        { id: 'cdtrg_3', name: '03. Biên bản thương thảo', filename: '03_BBThuongThao.docx' },
+                        { id: 'cdtrg_4', name: '04. Quyết định phê duyệt KQ', filename: '04_QD_KQLCNT.docx' },
+                        { id: 'cdtrg_5', name: '05. Hợp đồng kinh tế', filename: '05_HopDong.docx' }
+                    ]
+                },
+                'Đấu thầu rộng rãi': {
+                    'Bước chuẩn bị': [
+                        { id: 'dtrr_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
+                        { id: 'dtrr_2', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' },
+                        { id: 'dtrr_3', name: '03. Quyết định lập Tổ chuyên gia', filename: '03_LapToChuyenGia.docx' }
+                    ],
+                    'Bước thực hiện': [
+                        { id: 'dtrr_4', name: '04. Báo cáo đánh giá E-HSDT', filename: '04_BCDanhGia.docx' },
+                        { id: 'dtrr_5', name: '05. Quyết định phê duyệt KQ', filename: '05_QD_KQLCNT.docx' },
+                        { id: 'dtrr_6', name: '06. Thông báo trúng thầu', filename: '06_ThongBaoTrungThau.docx' },
+                        { id: 'dtrr_7', name: '07. Hợp đồng kinh tế', filename: '07_HopDong.docx' }
+                    ]
+                }
             };
+
+            const cacBuocList = ['Bước chuẩn bị', 'Bước thực hiện'];
 
             const handleInputChange = (e) => {
                 const { name, value } = e.target;
@@ -174,11 +216,18 @@
                         throw new Error("Thư viện JSZip chưa tải xong. Vui lòng F5 tải lại trang.");
                     }
 
-                    const currentDocs = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
+                    // Lấy ra danh sách cụm biểu mẫu dựa vào Hình thức và Bước đang chọn
+                    const currentFormLogic = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
+                    const currentDocsToGen = currentFormLogic[formData.buocLCNT] || [];
+                    
+                    if (currentDocsToGen.length === 0) {
+                        throw new Error(`Chưa có biểu mẫu nào được cấu hình cho phần ${formData.hinhThucLCNT} - ${formData.buocLCNT}.`);
+                    }
+
                     const zipArchive = new window.JSZip();
                     let successCount = 0;
                     
-                    for (const docInfo of currentDocs) {
+                    for (const docInfo of currentDocsToGen) {
                         try {
                             const response = await fetch('./' + docInfo.filename);
                             if (!response.ok) {
@@ -189,11 +238,11 @@
                             const zip = new window.PizZip(arrayBuffer);
                             const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-                            // TÍNH TOÁN CÁC BIẾN PHÁI SINH TRƯỚC KHI TRỘN VÀO WORD
+                            // TÍNH TOÁN CÁC BIẾN PHÁI SINH
                             const dataToRender = {
                                 ...formData,
                                 tongMucDauTuBangChu: docTien(formData.tongMucDauTu),
-                                soTienDamBaoDuThauBangChu: docTien(formData.soTienDamBaoDuThau), // Dịch cả tiền bảo đảm dự thầu
+                                soTienDamBaoDuThauBangChu: docTien(formData.soTienDamBaoDuThau), 
                                 
                                 ngayToTrinhFull: formatNgay(formData.ngayToTrinh, 'full'),
                                 ngayToTrinhShort: formatNgay(formData.ngayToTrinh, 'short'),
@@ -228,7 +277,7 @@
                     }
 
                     const content = await zipArchive.generateAsync({ type: "blob" });
-                    saveAs(content, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}.zip`);
+                    saveAs(content, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}_${formData.buocLCNT.replace(/\s+/g, '')}.zip`);
                     
                 } catch (error) {
                     console.error("Lỗi tạo file ZIP:", error);
@@ -238,7 +287,9 @@
                 }
             };
 
-            const currentDocs = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
+            // Xác định danh sách file hiển thị ở giao diện
+            const currentFormLogic = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
+            const currentDocs = currentFormLogic[formData.buocLCNT] || [];
 
             return (
                 <div className="min-h-screen p-4 md:p-8">
@@ -277,20 +328,32 @@
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2 space-y-6">
                                 
-                                {/* BOX 1: CẤU HÌNH QUY TRÌNH (Đã được đưa lên đầu) */}
+                                {/* BOX 1: CẤU HÌNH QUY TRÌNH MA TRẬN */}
                                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-blue-500">
                                     <h2 className="text-xl font-semibold mb-4 text-slate-700 flex items-center">
                                         <span className="bg-blue-100 text-blue-800 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">1</span>
-                                        Cấu hình Hình thức Đấu thầu
+                                        Cấu hình
                                     </h2>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Hình thức Lựa chọn Nhà thầu <span className="text-red-500">*</span></label>
-                                        <select name="hinhThucLCNT" value={formData.hinhThucLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
-                                            {Object.keys(logicTree).map(key => (
-                                                <option key={key} value={key}>{key}</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-xs text-slate-500 mt-2 italic">Thay đổi tùy chọn này sẽ tự động thay đổi các biểu mẫu được xuất ra và các ô cần nhập bên dưới.</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">1.1. Hình thức LCNT <span className="text-red-500">*</span></label>
+                                            <select name="hinhThucLCNT" value={formData.hinhThucLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
+                                                {Object.keys(logicTree).map(key => (
+                                                    <option key={key} value={key}>{key}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">1.2. Bước thực hiện <span className="text-red-500">*</span></label>
+                                            <select name="buocLCNT" value={formData.buocLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
+                                                {cacBuocList.map(step => (
+                                                    <option key={step} value={step}>{step}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-span-1 md:col-span-2">
+                                            <p className="text-xs text-slate-500 italic">Thay đổi tùy chọn "Hình thức" và "Bước" sẽ tự động quyết định các cụm hồ sơ được xuất ra ở khung Đóng gói.</p>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -355,17 +418,17 @@
                                             )}
                                         </div>
 
-                                        {/* TÙY BIẾN 1: Nếu là "Chỉ định thầu", hiển thị ô nhập tên nhà thầu dự kiến */}
-                                        {formData.hinhThucLCNT === 'Chỉ định thầu rút gọn' && (
+                                        {/* TÙY BIẾN 1: Tên nhà thầu áp dụng cho các hình thức hạn chế */}
+                                        {['Chỉ định thầu rút gọn', 'Dưới 50 triệu', 'Chào giá hạn chế'].includes(formData.hinhThucLCNT) && (
                                             <div className="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
-                                                <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Chỉ định thầu</h3>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu chỉ định (dự kiến)</label>
+                                                <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Nhà thầu</h3>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu chỉ định (hoặc dự kiến)</label>
                                                 <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-green-300 rounded-lg focus:ring-2 focus:green-500 outline-none" />
                                             </div>
                                         )}
 
-                                        {/* TÙY BIẾN 2: Nếu là "Đấu thầu rộng rãi", hiển thị ô Phương thức LCNT và Tiền bảo đảm */}
-                                        {formData.hinhThucLCNT === 'Đấu thầu rộng rãi' && (
+                                        {/* TÙY BIẾN 2: Phương thức LCNT cho các hình thức mở rộng */}
+                                        {['Đấu thầu rộng rãi', 'Chào giá rộng rãi'].includes(formData.hinhThucLCNT) && (
                                             <div className="col-span-1 md:col-span-2 bg-amber-50 p-4 rounded-lg border border-amber-200 mt-2">
                                                 <h3 className="text-sm font-bold text-amber-800 mb-3">✦ Thông tin dành riêng cho Đấu thầu</h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -421,18 +484,27 @@
                             <div className="lg:col-span-1 space-y-6">
                                 <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 sticky top-4">
                                     <h3 className="font-bold text-blue-900 mb-2">Đóng gói Hồ sơ</h3>
-                                    <p className="text-sm text-blue-700 mb-4">Hệ thống sẽ trộn dữ liệu vào <strong>{currentDocs.length} biểu mẫu</strong> (của hình thức <span className="font-semibold underline">{formData.hinhThucLCNT}</span>) và nén thành 1 file .ZIP cho bạn tải về.</p>
+                                    <p className="text-sm text-blue-700 mb-4">
+                                        Hệ thống sẽ trộn dữ liệu vào <strong>{currentDocs.length} biểu mẫu</strong> 
+                                        <br/>(của hình thức <span className="font-semibold underline">{formData.hinhThucLCNT}</span> - <span className="font-semibold">{formData.buocLCNT}</span>) và nén thành 1 file .ZIP.
+                                    </p>
                                     
-                                    <ul className="text-xs text-blue-800 mb-6 space-y-1">
-                                        {currentDocs.map(doc => (
-                                            <li key={doc.id}>✓ {doc.name}</li>
-                                        ))}
-                                    </ul>
+                                    {currentDocs.length > 0 ? (
+                                        <ul className="text-xs text-blue-800 mb-6 space-y-1">
+                                            {currentDocs.map(doc => (
+                                                <li key={doc.id}>✓ {doc.name}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <div className="text-xs text-red-600 bg-red-50 p-2 rounded mb-6 border border-red-200">
+                                            ⚠️ Chưa có biểu mẫu nào được cấu hình cho Bước này. Bạn vui lòng bổ sung vào biến logicTree trong mã nguồn.
+                                        </div>
+                                    )}
 
                                     <button 
                                         onClick={generateDocument}
-                                        disabled={isGenerating}
-                                        className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center ${isGenerating ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                        disabled={isGenerating || currentDocs.length === 0}
+                                        className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center ${(isGenerating || currentDocs.length === 0) ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
                                     >
                                         {isGenerating ? 'Đang tạo & nén ZIP...' : `Xuất File .ZIP Hồ Sơ`}
                                     </button>
