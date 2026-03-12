@@ -15,7 +15,7 @@
     <!-- THƯ VIỆN XỬ LÝ WORD VÀ TẢI FILE -->
     <script src="https://unpkg.com/pizzip@3.1.7/dist/pizzip.js"></script>
     <script src="https://unpkg.com/docxtemplater@3.37.11/build/docxtemplater.js"></script>
-    <!-- THƯ VIỆN MỚI: DÙNG ĐỂ NÉN NHIỀU FILE THÀNH 1 FILE .ZIP -->
+    <!-- THƯ VIỆN NÉN FILE ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 </head>
@@ -23,7 +23,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- HÀM HỖ TRỢ: ĐỌC SỐ TIỀN THÀNH CHỮ TIẾNG VIỆT ---
+        // --- HÀM HỖ TRỢ: ĐỌC SỐ TIỀN THÀNH CHỮ ---
         const docTien = (so) => {
             if (!so) return '';
             let str = parseInt(so.replace(/\D/g, '')).toString();
@@ -68,7 +68,7 @@
             return result.charAt(0).toUpperCase() + result.slice(1) + " đồng chẵn";
         };
 
-        // --- HÀM HỖ TRỢ 2: XỬ LÝ NGÀY THÁNG ĐỊNH DẠNG VIỆT NAM ---
+        // --- HÀM HỖ TRỢ: XỬ LÝ NGÀY THÁNG ---
         const formatNgay = (dateStr, type = 'full') => {
             if (!dateStr) return '...'; 
             const [year, month, day] = dateStr.split('-');
@@ -82,7 +82,7 @@
         };
 
         const App = () => {
-            // BƯỚC 1: KHAI BÁO BIẾN
+            // 1. BIẾN QUẢN LÝ DỮ LIỆU
             const [formData, setFormData] = React.useState({
                 tenDuAn: '',
                 chuDauTu: '',
@@ -91,7 +91,7 @@
                 soQuyetDinhDA: '',
                 tenGoiThau: '',
                 hinhThucLCNT: 'Chỉ định thầu rút gọn', 
-                buocLCNT: 'Bước chuẩn bị', // Biến mới quản lý Bước
+                giaiDoanLCNT: 'Giai đoạn chuẩn bị', 
                 loaiHopDong: 'Trọn gói',
                 thoiGianThucHien: '', 
                 tenNhaThau: '', 
@@ -103,70 +103,123 @@
                 ngayQuyetDinh: ''
             });
 
-            const [activeTab, setActiveTab] = React.useState('cauhinh'); // Biến quản lý Tab hiện tại
-
+            const [activeTab, setActiveTab] = React.useState('cauhinh'); 
             const [isGenerating, setIsGenerating] = React.useState(false);
             const fileInputRef = React.useRef(null);
 
-            // MA TRẬN LOGIC (HÌNH THỨC x BƯỚC)
+            // 2. MA TRẬN LOGIC (HÌNH THỨC x GIAI ĐOẠN) CHUẨN FILE DOCX CỦA BẠN
             const logicTree = {
                 'Dưới 50 triệu': {
-                    'Bước chuẩn bị': [{ id: 'd50_1', name: '01. Quyết định mua sắm', filename: '01_QD_MuaSam.docx' }],
-                    'Bước thực hiện': [
-                        { id: 'd50_2', name: '02. Biên bản nghiệm thu', filename: '02_BB_NghiemThu.docx' },
-                        { id: 'd50_3', name: '03. Thanh lý hợp đồng', filename: '03_ThanhLy.docx' },
-                        { id: 'd50_4', name: '04. Hợp đồng mua bán', filename: '04_HopDongMuaBan.docx' }
+                    'Giai đoạn chuẩn bị': [
+                        { id: 'd50_1', name: '01. Tờ trình phê duyệt chủ trương', filename: '01_ToTrinhChuTruong.docx' },
+                        { id: 'd50_2', name: '02. Báo cáo mua sắm dưới 50 triệu', filename: '02_BaoCaoMuaSam_D50.docx' }
+                    ],
+                    'Giai đoạn thực hiện': [
+                        { id: 'd50_3', name: '03. Hợp đồng', filename: '03_HopDong.docx' }
                     ]
                 },
                 'Chào giá hạn chế': {
-                    'Bước chuẩn bị': [{ id: 'cghc_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' }],
-                    'Bước thực hiện': [
-                        { id: 'cghc_2', name: '02. Báo cáo đánh giá báo giá', filename: '02_BaoCaoDanhGia.docx' },
-                        { id: 'cghc_3', name: '03. Quyết định phê duyệt KQ LCNT', filename: '03_QD_KQLCNT.docx' },
-                        { id: 'cghc_4', name: '04. Hợp đồng', filename: '04_HopDong.docx' }
+                    'Giai đoạn chuẩn bị': [
+                        { id: 'cghc_1', name: '01. Tờ trình phê duyệt chủ trương', filename: '01_ToTrinhChuTruong.docx' },
+                        { id: 'cghc_2', name: '02. Báo cáo mua sắm dưới chào giá hạn chế', filename: '02_BaoCaoMuaSam_CGHC.docx' },
+                        { id: 'cghc_3', name: '03. Thông báo mời chào giá', filename: '03_ThongBaoMoiChaoGia.docx' }
+                    ],
+                    'Giai đoạn thực hiện': [
+                        { id: 'cghc_4', name: '04. Biên bản mở thư chào giá', filename: '04_BB_MoThuChaoGia.docx' },
+                        { id: 'cghc_5', name: '05. Biên bản đánh giá hồ sơ chào giá', filename: '05_BB_DanhGiaHSCG.docx' },
+                        { id: 'cghc_6', name: '06. Biên bản thương thảo hợp đồng', filename: '06_BB_ThuongThaoHD.docx' },
+                        { id: 'cghc_7', name: '07. Báo cáo đánh giá hồ sơ chào giá', filename: '07_BC_DanhGiaHSCG.docx' },
+                        { id: 'cghc_8', name: '08. Thông báo Kết quả chào giá', filename: '08_TB_KQLCNT.docx' },
+                        { id: 'cghc_9', name: '09. Hợp đồng', filename: '09_HopDong.docx' }
                     ]
                 },
                 'Chào giá rộng rãi': {
-                    'Bước chuẩn bị': [{ id: 'cgrr_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' }],
-                    'Bước thực hiện': [
-                        { id: 'cgrr_2', name: '02. Báo cáo đánh giá E-HSQT', filename: '02_BaoCaoDanhGia.docx' },
-                        { id: 'cgrr_3', name: '03. Quyết định phê duyệt KQ', filename: '03_QD_KQLCNT.docx' },
-                        { id: 'cgrr_4', name: '04. Hợp đồng', filename: '04_HopDong.docx' }
+                    'Giai đoạn chuẩn bị': [
+                        { id: 'cgrr_1', name: '01. Tờ trình phê duyệt chủ trương', filename: '01_ToTrinhChuTruong.docx' },
+                        { id: 'cgrr_2', name: '02. Báo cáo mua sắm dưới chào giá rộng rãi', filename: '02_BaoCaoMuaSam_CGRR.docx' },
+                        { id: 'cgrr_3', name: '03. Thông báo mời chào giá', filename: '03_ThongBaoMoiChaoGia.docx' },
+                        { id: 'cgrr_4', name: '04. Nội dung đăng báo địa phương', filename: '04_NoiDungDangBao.docx' }
+                    ],
+                    'Giai đoạn thực hiện': [
+                        { id: 'cgrr_5', name: '05. Biên bản mở thư chào giá', filename: '05_BB_MoThuChaoGia.docx' },
+                        { id: 'cgrr_6', name: '06. Biên bản đánh giá hồ sơ chào giá', filename: '06_BB_DanhGiaHSCG.docx' },
+                        { id: 'cgrr_7', name: '07. Biên bản thương thảo hợp đồng', filename: '07_BB_ThuongThaoHD.docx' },
+                        { id: 'cgrr_8', name: '08. Báo cáo đánh giá hồ sơ chào giá', filename: '08_BC_DanhGiaHSCG.docx' },
+                        { id: 'cgrr_9', name: '09. Thông báo Kết quả chào giá', filename: '09_TB_KQLCNT.docx' },
+                        { id: 'cgrr_10', name: '10. Hợp đồng', filename: '10_HopDong.docx' }
                     ]
                 },
                 'Chỉ định thầu rút gọn': {
-                    'Bước chuẩn bị': [
-                        { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
-                        { id: 'cdtrg_2', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' }
+                    'Giai đoạn chuẩn bị': [
+                        { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt Kế hoạch LCNT', filename: '01_ToTrinh_KHLCNT.docx' },
+                        { id: 'cdtrg_2', name: '02. Quyết định phê duyệt Kế hoạch LCNT', filename: '02_QD_KHLCNT.docx' },
+                        { id: 'cdtrg_3', name: '03. Công văn gửi Nhà thầu mời thương thảo', filename: '03_CV_MoiThuongThao.docx' }
                     ],
-                    'Bước thực hiện': [
-                        { id: 'cdtrg_3', name: '03. Biên bản thương thảo', filename: '03_BBThuongThao.docx' },
-                        { id: 'cdtrg_4', name: '04. Quyết định phê duyệt KQ', filename: '04_QD_KQLCNT.docx' },
-                        { id: 'cdtrg_5', name: '05. Hợp đồng kinh tế', filename: '05_HopDong.docx' }
+                    'Giai đoạn thực hiện': [
+                        { id: 'cdtrg_4', name: '04. Biên bản thương thảo hợp đồng', filename: '04_BB_ThuongThaoHD.docx' },
+                        { id: 'cdtrg_5', name: '05. Thông báo kết quả Chỉ định thầu', filename: '05_TB_KQLCNT.docx' },
+                        { id: 'cdtrg_6', name: '06. Hợp đồng', filename: '06_HopDong.docx' }
                     ]
                 },
                 'Đấu thầu rộng rãi': {
-                    'Bước chuẩn bị': [
-                        { id: 'dtrr_1', name: '01. Tờ trình phê duyệt KHLCNT', filename: '01_ToTrinh_KHLCNT.docx' },
-                        { id: 'dtrr_2', name: '02. Quyết định phê duyệt KHLCNT', filename: '02_QuyetDinh_KHLCNT.docx' },
-                        { id: 'dtrr_3', name: '03. Quyết định lập Tổ chuyên gia', filename: '03_LapToChuyenGia.docx' }
+                    'Giai đoạn Chuẩn bị Hồ sơ mời thầu (E-HSMT)': [
+                        { id: 'dtrr_1', name: '01. Quyết định thành lập Tổ chuyên gia và Tổ thẩm định', filename: '01_QD_ThanhLapTo.docx' },
+                        { id: 'dtrr_2', name: '02. Biên bản họp Tổ chuyên gia (thông qua E-HSMT)', filename: '02_BB_HopTCG.docx' },
+                        { id: 'dtrr_3', name: '03. Tờ trình đề nghị thẩm định, phê duyệt E-HSMT', filename: '03_TTr_PheDuyetHSMT.docx' },
+                        { id: 'dtrr_4', name: '04. Biên bản họp Tổ thẩm định', filename: '04_BB_HopTTD.docx' },
+                        { id: 'dtrr_5', name: '05. Báo cáo thẩm định E-HSMT', filename: '05_BC_ThamDinhHSMT.docx' },
+                        { id: 'dtrr_6', name: '06. Quyết định phê duyệt E-HSMT', filename: '06_QD_PheDuyetHSMT.docx' }
                     ],
-                    'Bước thực hiện': [
-                        { id: 'dtrr_4', name: '04. Báo cáo đánh giá E-HSDT', filename: '04_BCDanhGia.docx' },
-                        { id: 'dtrr_5', name: '05. Quyết định phê duyệt KQ', filename: '05_QD_KQLCNT.docx' },
-                        { id: 'dtrr_6', name: '06. Thông báo trúng thầu', filename: '06_ThongBaoTrungThau.docx' },
-                        { id: 'dtrr_7', name: '07. Hợp đồng kinh tế', filename: '07_HopDong.docx' }
+                    'Giai đoạn Tổ chức Lựa chọn nhà thầu': [
+                        { id: 'dtrr_7', name: '07. Thông báo mời thầu (TBMT)', filename: '07_ThongBaoMoiThau.docx' },
+                        { id: 'dtrr_8', name: '08. Văn bản làm rõ E-HSMT (nếu có)', filename: '08_VB_LamRoHSMT.docx' },
+                        { id: 'dtrr_9', name: '09. Quyết định sửa đổi E-HSMT (nếu có)', filename: '09_QD_SuaDoiHSMT.docx' },
+                        { id: 'dtrr_10', name: '10. Biên bản mở thầu', filename: '10_BB_MoThau.docx' }
+                    ],
+                    'Giai đoạn Đánh giá Hồ sơ dự thầu (E-HSDT)': [
+                        { id: 'dtrr_11', name: '11. Biên bản họp Tổ chuyên gia (phân công nhiệm vụ)', filename: '11_BB_HopTCG_PhanCong.docx' },
+                        { id: 'dtrr_12', name: '12. Văn bản yêu cầu làm rõ E-HSDT (nếu có)', filename: '12_VB_LamRoHSDT.docx' },
+                        { id: 'dtrr_13', name: '13. Biên bản họp Tổ chuyên gia (thông qua kết quả)', filename: '13_BB_HopTCG_KetQua.docx' },
+                        { id: 'dtrr_14', name: '14. Báo cáo đánh giá E-HSDT', filename: '14_BC_DanhGiaHSDT.docx' }
+                    ],
+                    'Giai đoạn Thương thảo và Hoàn thiện hợp đồng': [
+                        { id: 'dtrr_15', name: '15. Văn bản mời thương thảo/hoàn thiện hợp đồng', filename: '15_VB_MoiThuongThao.docx' },
+                        { id: 'dtrr_16', name: '16. Biên bản thương thảo hợp đồng', filename: '16_BB_ThuongThaoHD.docx' },
+                        { id: 'dtrr_17', name: '17. Biên bản hoàn thiện hợp đồng', filename: '17_BB_HoanThienHD.docx' }
+                    ],
+                    'Giai đoạn Thẩm định và Phê duyệt Kết quả LCNT': [
+                        { id: 'dtrr_18', name: '18. Tờ trình đề nghị thẩm định, phê duyệt Kết quả LCNT', filename: '18_TTr_PheDuyetKQLCNT.docx' },
+                        { id: 'dtrr_19', name: '19. Biên bản họp Tổ thẩm định', filename: '19_BB_HopTTD_KQLCNT.docx' },
+                        { id: 'dtrr_20', name: '20. Báo cáo thẩm định Kết quả LCNT', filename: '20_BC_ThamDinhKQLCNT.docx' },
+                        { id: 'dtrr_21', name: '21. Quyết định phê duyệt Kết quả LCNT', filename: '21_QD_PheDuyetKQLCNT.docx' }
+                    ],
+                    'Giai đoạn Công khai và Ký kết hợp đồng': [
+                        { id: 'dtrr_22', name: '22. Thông báo Kết quả LCNT', filename: '22_TB_KQLCNT.docx' },
+                        { id: 'dtrr_23', name: '23. Hợp đồng kinh tế', filename: '23_HopDong.docx' }
                     ]
                 }
             };
 
-            const cacBuocList = ['Bước chuẩn bị', 'Bước thực hiện'];
+            // Xác định danh sách file hiển thị ở giao diện DỰA VÀO LỰA CHỌN
+            const currentFormLogic = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
+            // Lấy danh sách các Giai đoạn động (Vì Đấu thầu rộng rãi có 6 giai đoạn, loại khác chỉ có 2)
+            const danhSachGiaiDoan = Object.keys(currentFormLogic);
+            const currentDocs = currentFormLogic[formData.giaiDoanLCNT] || [];
 
+            // HÀM XỬ LÝ KHI NHẬP/CHỌN DỮ LIỆU THAY ĐỔI
             const handleInputChange = (e) => {
                 const { name, value } = e.target;
-                setFormData({
-                    ...formData,
-                    [name]: value
+                
+                setFormData(prevData => {
+                    const newData = { ...prevData, [name]: value };
+                    
+                    // NẾU THAY ĐỔI HÌNH THỨC THẦU -> PHẢI TỰ ĐỘNG RESET LẠI GIAI ĐOẠN HIỆN TẠI
+                    if (name === 'hinhThucLCNT') {
+                        const availablePhases = Object.keys(logicTree[value] || logicTree['Chỉ định thầu rút gọn']);
+                        newData.giaiDoanLCNT = availablePhases[0];
+                    }
+                    
+                    return newData;
                 });
             };
 
@@ -195,7 +248,17 @@
                 reader.onload = (event) => {
                     try {
                         const importedData = JSON.parse(event.target.result);
-                        setFormData({ ...formData, ...importedData });
+                        setFormData(prevData => {
+                            const updatedData = { ...prevData, ...importedData };
+                            // Đảm bảo giai đoạn hợp lệ khi load json
+                            if (updatedData.hinhThucLCNT) {
+                                const validPhases = Object.keys(logicTree[updatedData.hinhThucLCNT]);
+                                if (!validPhases.includes(updatedData.giaiDoanLCNT)) {
+                                    updatedData.giaiDoanLCNT = validPhases[0];
+                                }
+                            }
+                            return updatedData;
+                        });
                         alert("Đã nhập dữ liệu thành công!");
                     } catch (err) {
                         alert("Lỗi! File không đúng định dạng. Vui lòng chọn file .json bạn đã lưu trước đó.");
@@ -204,10 +267,6 @@
                 reader.readAsText(file);
                 e.target.value = null; 
             };
-
-            // Xác định danh sách file hiển thị ở giao diện DỰA VÀO LỰA CHỌN
-            const currentFormLogic = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
-            const currentDocs = currentFormLogic[formData.buocLCNT] || [];
 
             const generateDocument = async () => {
                 if (!formData.tenDuAn || !formData.tenGoiThau) {
@@ -222,10 +281,10 @@
                         throw new Error("Thư viện JSZip chưa tải xong. Vui lòng F5 tải lại trang.");
                     }
 
-                    const currentDocsToGen = currentDocs; // Đã được lấy ở trên
+                    const currentDocsToGen = currentDocs; 
                     
                     if (currentDocsToGen.length === 0) {
-                        throw new Error(`Chưa có biểu mẫu nào được cấu hình cho phần ${formData.hinhThucLCNT} - ${formData.buocLCNT}.`);
+                        throw new Error(`Chưa có biểu mẫu nào được cấu hình cho phần ${formData.hinhThucLCNT} - ${formData.giaiDoanLCNT}.`);
                     }
 
                     const zipArchive = new window.JSZip();
@@ -281,7 +340,7 @@
                     }
 
                     const content = await zipArchive.generateAsync({ type: "blob" });
-                    saveAs(content, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}_${formData.buocLCNT.replace(/\s+/g, '')}.zip`);
+                    saveAs(content, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}_${formData.giaiDoanLCNT.replace(/\s+/g, '')}.zip`);
                     
                 } catch (error) {
                     console.error("Lỗi tạo file ZIP:", error);
@@ -379,9 +438,9 @@
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">1.2. Bước thực hiện <span className="text-red-500">*</span></label>
-                                                    <select name="buocLCNT" value={formData.buocLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
-                                                        {cacBuocList.map(step => (
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">1.2. Giai đoạn thực hiện <span className="text-red-500">*</span></label>
+                                                    <select name="giaiDoanLCNT" value={formData.giaiDoanLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
+                                                        {danhSachGiaiDoan.map(step => (
                                                             <option key={step} value={step}>{step}</option>
                                                         ))}
                                                     </select>
@@ -391,7 +450,7 @@
                                                 <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                                                     <h3 className="text-md font-bold text-slate-700 mb-3 flex items-center">
                                                         <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                                        Danh mục biểu mẫu sẽ tự động sinh ra:
+                                                        Danh mục biểu mẫu sẽ tự động sinh ra theo cấu hình này:
                                                     </h3>
                                                     {currentDocs.length > 0 ? (
                                                         <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -405,7 +464,7 @@
                                                     ) : (
                                                         <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200 flex items-center">
                                                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                                            Chưa có biểu mẫu nào được cấu hình cho Bước này.
+                                                            Chưa có biểu mẫu nào được cấu hình cho Giai đoạn này.
                                                         </div>
                                                     )}
                                                 </div>
@@ -471,7 +530,7 @@
                                                 {['Chỉ định thầu rút gọn', 'Dưới 50 triệu', 'Chào giá hạn chế'].includes(formData.hinhThucLCNT) && (
                                                     <div className="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
                                                         <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Nhà thầu</h3>
-                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu chỉ định (hoặc dự kiến)</label>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu (hoặc dự kiến)</label>
                                                         <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-green-300 rounded-lg focus:ring-2 focus:green-500 outline-none" />
                                                     </div>
                                                 )}
@@ -501,21 +560,21 @@
 
                                         {/* TAB 4: CĂN CỨ PHÁP LÝ */}
                                         <div className={activeTab === 'cancu' ? 'block' : 'hidden'}>
-                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">4. Thông tin Văn bản liên quan (Căn cứ)</h2>
+                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">4. Thông Văn bản liên quan (Căn cứ)</h2>
                                             <p className="text-sm text-slate-500 mb-4">Nhập các thông tin này để làm "Căn cứ pháp lý" cho các văn bản sinh ra phía sau.</p>
                                             
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số Tờ trình KHLCNT</label>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số Tờ trình / Công văn</label>
                                                     <input type="text" name="soToTrinh" value={formData.soToTrinh} onChange={handleInputChange} placeholder="VD: 15/TTr-BQL" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Tờ trình</label>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Ngày tháng</label>
                                                     <input type="date" name="ngayToTrinh" value={formData.ngayToTrinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
                                                 </div>
 
                                                 <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ phê duyệt KHLCNT</label>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số Quyết định liên quan</label>
                                                     <input type="text" name="soQuyetDinh" value={formData.soQuyetDinh} onChange={handleInputChange} placeholder="VD: 128/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
                                                 </div>
                                                 <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
@@ -528,7 +587,7 @@
                                     </div>
                                 </div>
 
-                                {/* NÚT NEXT/PREV ĐỂ CHUYỂN TAB TIỆN LỢI */}
+                                {/* NÚT NEXT/PREV */}
                                 <div className="flex justify-between items-center px-2 mt-4">
                                     <button 
                                         onClick={() => {
@@ -560,7 +619,7 @@
                                     <h3 className="font-bold text-blue-900 mb-2">Đóng gói Hồ sơ</h3>
                                     <p className="text-sm text-blue-700 mb-4">
                                         Hệ thống sẽ trộn dữ liệu vào <strong>{currentDocs.length} biểu mẫu</strong> 
-                                        <br/>(của hình thức <span className="font-semibold underline">{formData.hinhThucLCNT}</span> - <span className="font-semibold">{formData.buocLCNT}</span>) và nén thành 1 file .ZIP.
+                                        <br/>(của hình thức <span className="font-semibold underline">{formData.hinhThucLCNT}</span> - <span className="font-semibold">{formData.giaiDoanLCNT}</span>) và nén thành 1 file .ZIP.
                                     </p>
                                     
                                     {currentDocs.length > 0 ? (
@@ -571,7 +630,7 @@
                                         </ul>
                                     ) : (
                                         <div className="text-xs text-red-600 bg-red-50 p-2 rounded mb-6 border border-red-200">
-                                            ⚠️ Chưa có biểu mẫu nào được cấu hình cho Bước này. Bạn vui lòng bổ sung vào biến logicTree trong mã nguồn.
+                                            ⚠️ Chưa có biểu mẫu nào được cấu hình cho Giai đoạn này.
                                         </div>
                                     )}
 
