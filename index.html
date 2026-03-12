@@ -103,6 +103,8 @@
                 ngayQuyetDinh: ''
             });
 
+            const [activeTab, setActiveTab] = React.useState('cauhinh'); // Biến quản lý Tab hiện tại
+
             const [isGenerating, setIsGenerating] = React.useState(false);
             const fileInputRef = React.useRef(null);
 
@@ -326,158 +328,212 @@
                         </header>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div className="lg:col-span-2 space-y-6">
+                            <div className="lg:col-span-2">
                                 
-                                {/* BOX 1: CẤU HÌNH QUY TRÌNH MA TRẬN */}
-                                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-blue-500">
-                                    <h2 className="text-xl font-semibold mb-4 text-slate-700 flex items-center">
-                                        <span className="bg-blue-100 text-blue-800 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">1</span>
-                                        Cấu hình
-                                    </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">1.1. Hình thức LCNT <span className="text-red-500">*</span></label>
-                                            <select name="hinhThucLCNT" value={formData.hinhThucLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
-                                                {Object.keys(logicTree).map(key => (
-                                                    <option key={key} value={key}>{key}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">1.2. Bước thực hiện <span className="text-red-500">*</span></label>
-                                            <select name="buocLCNT" value={formData.buocLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
-                                                {cacBuocList.map(step => (
-                                                    <option key={step} value={step}>{step}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="col-span-1 md:col-span-2">
-                                            <p className="text-xs text-slate-500 italic">Thay đổi tùy chọn "Hình thức" và "Bước" sẽ tự động quyết định các cụm hồ sơ được xuất ra ở khung Đóng gói.</p>
-                                        </div>
+                                {/* KHUNG CHỨA TABS CHÍNH */}
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                    
+                                    {/* THANH ĐIỀU HƯỚNG TABS */}
+                                    <div className="flex flex-nowrap overflow-x-auto border-b border-slate-200 bg-slate-50">
+                                        <button 
+                                            onClick={() => setActiveTab('cauhinh')}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'cauhinh' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                        >
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'cauhinh' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'}`}>1</span>
+                                            Cấu hình
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab('duan')}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'duan' ? 'border-indigo-600 text-indigo-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                        >
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'duan' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-600'}`}>2</span>
+                                            Dự án
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab('goithau')}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'goithau' ? 'border-emerald-600 text-emerald-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                        >
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'goithau' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>3</span>
+                                            Gói thầu
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab('cancu')}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'cancu' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                        >
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'cancu' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-600'}`}>4</span>
+                                            Căn cứ pháp lý
+                                        </button>
                                     </div>
-                                </div>
 
-                                {/* Box 2: Thông tin Dự án */}
-                                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                                    <h2 className="text-xl font-semibold mb-4 text-slate-700 flex items-center">
-                                        <span className="bg-indigo-100 text-indigo-800 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">2</span>
-                                        Thông tin chung Dự án
-                                    </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="col-span-1 md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Tên Dự án <span className="text-red-500">*</span></label>
-                                            <input type="text" name="tenDuAn" value={formData.tenDuAn} onChange={handleInputChange} placeholder="VD: Xây dựng trường mầm non A" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Chủ đầu tư</label>
-                                            <input type="text" name="chuDauTu" value={formData.chuDauTu} onChange={handleInputChange} placeholder="VD: UBND Huyện B" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Nguồn vốn</label>
-                                            <input type="text" name="nguonVon" value={formData.nguonVon} onChange={handleInputChange} placeholder="VD: Ngân sách nhà nước" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ Phê duyệt Dự án</label>
-                                            <input type="text" name="soQuyetDinhDA" value={formData.soQuyetDinhDA} onChange={handleInputChange} placeholder="VD: 123/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Box 3: Chi tiết Gói thầu */}
-                                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                                    <h2 className="text-xl font-semibold mb-4 text-slate-700 flex items-center">
-                                        <span className="bg-emerald-100 text-emerald-800 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">3</span>
-                                        Chi tiết Gói thầu
-                                    </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="col-span-1 md:col-span-2">
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Tên Gói thầu <span className="text-red-500">*</span></label>
-                                            <input type="text" name="tenGoiThau" value={formData.tenGoiThau} onChange={handleInputChange} placeholder="VD: Thi công xây lắp hạng mục chính" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
+                                    {/* NỘI DUNG TABS */}
+                                    <div className="p-6">
                                         
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Loại Hợp đồng</label>
-                                            <select name="loaiHopDong" value={formData.loaiHopDong} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white">
-                                                <option value="Trọn gói">Trọn gói</option>
-                                                <option value="Theo đơn giá cố định">Theo đơn giá cố định</option>
-                                                <option value="Theo đơn giá điều chỉnh">Theo đơn giá điều chỉnh</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Thời gian thực hiện (ngày)</label>
-                                            <input type="text" name="thoiGianThucHien" value={formData.thoiGianThucHien} onChange={handleInputChange} placeholder="VD: 120" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
-
-                                        <div className="col-span-1 md:col-span-2 border-t border-slate-100 mt-2 pt-4">
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Tổng mức đầu tư (Giá trị gói thầu) - VNĐ</label>
-                                            <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleNumberChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 font-semibold text-blue-900 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                            {formData.tongMucDauTu && (
-                                                <p className="text-sm text-blue-700 mt-2 italic bg-blue-50 p-2 rounded">
-                                                    <strong>Bằng chữ:</strong> {docTien(formData.tongMucDauTu)}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        {/* TÙY BIẾN 1: Tên nhà thầu áp dụng cho các hình thức hạn chế */}
-                                        {['Chỉ định thầu rút gọn', 'Dưới 50 triệu', 'Chào giá hạn chế'].includes(formData.hinhThucLCNT) && (
-                                            <div className="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
-                                                <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Nhà thầu</h3>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu chỉ định (hoặc dự kiến)</label>
-                                                <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-green-300 rounded-lg focus:ring-2 focus:green-500 outline-none" />
-                                            </div>
-                                        )}
-
-                                        {/* TÙY BIẾN 2: Phương thức LCNT cho các hình thức mở rộng */}
-                                        {['Đấu thầu rộng rãi', 'Chào giá rộng rãi'].includes(formData.hinhThucLCNT) && (
-                                            <div className="col-span-1 md:col-span-2 bg-amber-50 p-4 rounded-lg border border-amber-200 mt-2">
-                                                <h3 className="text-sm font-bold text-amber-800 mb-3">✦ Thông tin dành riêng cho Đấu thầu</h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Phương thức LCNT</label>
-                                                        <select name="phuongThucLCNT" value={formData.phuongThucLCNT} onChange={handleInputChange} className="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white outline-none">
-                                                            <option value="Một giai đoạn một túi hồ sơ">Một giai đoạn một túi hồ sơ</option>
-                                                            <option value="Một giai đoạn hai túi hồ sơ">Một giai đoạn hai túi hồ sơ</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Giá trị Bảo đảm dự thầu (VNĐ)</label>
-                                                        <input type="text" name="soTienDamBaoDuThau" value={formData.soTienDamBaoDuThau} onChange={handleNumberChange} placeholder="VD: 15.000.000" className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:amber-500 outline-none" />
-                                                    </div>
+                                        {/* TAB 1: CẤU HÌNH */}
+                                        <div className={activeTab === 'cauhinh' ? 'block' : 'hidden'}>
+                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">1. Cấu hình quy trình xuất biểu mẫu</h2>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">1.1. Hình thức LCNT <span className="text-red-500">*</span></label>
+                                                    <select name="hinhThucLCNT" value={formData.hinhThucLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
+                                                        {Object.keys(logicTree).map(key => (
+                                                            <option key={key} value={key}>{key}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">1.2. Bước thực hiện <span className="text-red-500">*</span></label>
+                                                    <select name="buocLCNT" value={formData.buocLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
+                                                        {cacBuocList.map(step => (
+                                                            <option key={step} value={step}>{step}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-1 md:col-span-2">
+                                                    <p className="text-xs text-slate-500 italic">Thay đổi tùy chọn "Hình thức" và "Bước" sẽ tự động quyết định các cụm hồ sơ được xuất ra ở khung Đóng gói.</p>
                                                 </div>
                                             </div>
-                                        )}
+                                        </div>
+
+                                        {/* TAB 2: DỰ ÁN */}
+                                        <div className={activeTab === 'duan' ? 'block' : 'hidden'}>
+                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">2. Thông tin chung Dự án</h2>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="col-span-1 md:col-span-2">
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tên Dự án <span className="text-red-500">*</span></label>
+                                                    <input type="text" name="tenDuAn" value={formData.tenDuAn} onChange={handleInputChange} placeholder="VD: Xây dựng trường mầm non A" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Chủ đầu tư</label>
+                                                    <input type="text" name="chuDauTu" value={formData.chuDauTu} onChange={handleInputChange} placeholder="VD: UBND Huyện B" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Nguồn vốn</label>
+                                                    <input type="text" name="nguonVon" value={formData.nguonVon} onChange={handleInputChange} placeholder="VD: Ngân sách nhà nước" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ Phê duyệt Dự án</label>
+                                                    <input type="text" name="soQuyetDinhDA" value={formData.soQuyetDinhDA} onChange={handleInputChange} placeholder="VD: 123/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* TAB 3: GÓI THẦU */}
+                                        <div className={activeTab === 'goithau' ? 'block' : 'hidden'}>
+                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">3. Chi tiết Gói thầu</h2>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="col-span-1 md:col-span-2">
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tên Gói thầu <span className="text-red-500">*</span></label>
+                                                    <input type="text" name="tenGoiThau" value={formData.tenGoiThau} onChange={handleInputChange} placeholder="VD: Thi công xây lắp hạng mục chính" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+                                                
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Loại Hợp đồng</label>
+                                                    <select name="loaiHopDong" value={formData.loaiHopDong} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white">
+                                                        <option value="Trọn gói">Trọn gói</option>
+                                                        <option value="Theo đơn giá cố định">Theo đơn giá cố định</option>
+                                                        <option value="Theo đơn giá điều chỉnh">Theo đơn giá điều chỉnh</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Thời gian thực hiện (ngày)</label>
+                                                    <input type="text" name="thoiGianThucHien" value={formData.thoiGianThucHien} onChange={handleInputChange} placeholder="VD: 120" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+
+                                                <div className="col-span-1 md:col-span-2 border-t border-slate-100 mt-2 pt-4">
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tổng mức đầu tư (Giá trị gói thầu) - VNĐ</label>
+                                                    <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleNumberChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 font-semibold text-blue-900 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    {formData.tongMucDauTu && (
+                                                        <p className="text-sm text-blue-700 mt-2 italic bg-blue-50 p-2 rounded">
+                                                            <strong>Bằng chữ:</strong> {docTien(formData.tongMucDauTu)}
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* TÙY BIẾN 1: Tên nhà thầu áp dụng cho các hình thức hạn chế */}
+                                                {['Chỉ định thầu rút gọn', 'Dưới 50 triệu', 'Chào giá hạn chế'].includes(formData.hinhThucLCNT) && (
+                                                    <div className="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
+                                                        <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Nhà thầu</h3>
+                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu chỉ định (hoặc dự kiến)</label>
+                                                        <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-green-300 rounded-lg focus:ring-2 focus:green-500 outline-none" />
+                                                    </div>
+                                                )}
+
+                                                {/* TÙY BIẾN 2: Phương thức LCNT cho các hình thức mở rộng */}
+                                                {['Đấu thầu rộng rãi', 'Chào giá rộng rãi'].includes(formData.hinhThucLCNT) && (
+                                                    <div className="col-span-1 md:col-span-2 bg-amber-50 p-4 rounded-lg border border-amber-200 mt-2">
+                                                        <h3 className="text-sm font-bold text-amber-800 mb-3">✦ Thông tin dành riêng cho Đấu thầu</h3>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-slate-700 mb-1">Phương thức LCNT</label>
+                                                                <select name="phuongThucLCNT" value={formData.phuongThucLCNT} onChange={handleInputChange} className="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white outline-none">
+                                                                    <option value="Một giai đoạn một túi hồ sơ">Một giai đoạn một túi hồ sơ</option>
+                                                                    <option value="Một giai đoạn hai túi hồ sơ">Một giai đoạn hai túi hồ sơ</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-sm font-medium text-slate-700 mb-1">Giá trị Bảo đảm dự thầu (VNĐ)</label>
+                                                                <input type="text" name="soTienDamBaoDuThau" value={formData.soTienDamBaoDuThau} onChange={handleNumberChange} placeholder="VD: 15.000.000" className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:amber-500 outline-none" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                            </div>
+                                        </div>
+
+                                        {/* TAB 4: CĂN CỨ PHÁP LÝ */}
+                                        <div className={activeTab === 'cancu' ? 'block' : 'hidden'}>
+                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">4. Thông tin Văn bản liên quan (Căn cứ)</h2>
+                                            <p className="text-sm text-slate-500 mb-4">Nhập các thông tin này để làm "Căn cứ pháp lý" cho các văn bản sinh ra phía sau.</p>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số Tờ trình KHLCNT</label>
+                                                    <input type="text" name="soToTrinh" value={formData.soToTrinh} onChange={handleInputChange} placeholder="VD: 15/TTr-BQL" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Tờ trình</label>
+                                                    <input type="date" name="ngayToTrinh" value={formData.ngayToTrinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
+                                                </div>
+
+                                                <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ phê duyệt KHLCNT</label>
+                                                    <input type="text" name="soQuyetDinh" value={formData.soQuyetDinh} onChange={handleInputChange} placeholder="VD: 128/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                </div>
+                                                <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
+                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Quyết định</label>
+                                                    <input type="date" name="ngayQuyetDinh" value={formData.ngayQuyetDinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
+                                                </div>
+                                            </div>
+                                        </div>
 
                                     </div>
                                 </div>
 
-                                {/* Box 4: Thông tin Văn bản (Căn cứ) */}
-                                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                                    <h2 className="text-xl font-semibold mb-4 text-slate-700 flex items-center">
-                                        <span className="bg-purple-100 text-purple-800 w-8 h-8 rounded-full inline-flex items-center justify-center mr-3 text-sm">4</span>
-                                        Thông tin Văn bản liên quan (Căn cứ)
-                                    </h2>
-                                    <p className="text-sm text-slate-500 mb-4">Nhập các thông tin này để làm "Căn cứ pháp lý" cho các văn bản sinh ra phía sau.</p>
-                                    
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Số Tờ trình KHLCNT</label>
-                                            <input type="text" name="soToTrinh" value={formData.soToTrinh} onChange={handleInputChange} placeholder="VD: 15/TTr-BQL" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Tờ trình</label>
-                                            <input type="date" name="ngayToTrinh" value={formData.ngayToTrinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
-                                        </div>
-
-                                        <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ phê duyệt KHLCNT</label>
-                                            <input type="text" name="soQuyetDinh" value={formData.soQuyetDinh} onChange={handleInputChange} placeholder="VD: 128/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                        </div>
-                                        <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Quyết định</label>
-                                            <input type="date" name="ngayQuyetDinh" value={formData.ngayQuyetDinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
-                                        </div>
-                                    </div>
+                                {/* NÚT NEXT/PREV ĐỂ CHUYỂN TAB TIỆN LỢI */}
+                                <div className="flex justify-between items-center px-2 mt-4">
+                                    <button 
+                                        onClick={() => {
+                                            if(activeTab === 'duan') setActiveTab('cauhinh');
+                                            if(activeTab === 'goithau') setActiveTab('duan');
+                                            if(activeTab === 'cancu') setActiveTab('goithau');
+                                        }}
+                                        className={`px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors ${activeTab === 'cauhinh' ? 'invisible' : ''}`}
+                                    >
+                                        &larr; Quay lại
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            if(activeTab === 'cauhinh') setActiveTab('duan');
+                                            if(activeTab === 'duan') setActiveTab('goithau');
+                                            if(activeTab === 'goithau') setActiveTab('cancu');
+                                        }}
+                                        className={`px-6 py-2 bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-sm font-bold hover:bg-blue-200 transition-colors ${activeTab === 'cancu' ? 'invisible' : ''}`}
+                                    >
+                                        Tiếp tục &rarr;
+                                    </button>
                                 </div>
+
                             </div>
 
                             {/* Cột phải: Xuất file */}
