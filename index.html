@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ thống AutoBid - Tự động hóa Hồ sơ Đấu thầu</title>
+    <title>Hệ thống AutoDocs - Cảng HKQT Cần Thơ</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & ReactDOM -->
@@ -104,7 +104,7 @@
             const [isGenerating, setIsGenerating] = React.useState(false);
             const fileInputRef = React.useRef(null);
 
-            // 2. MA TRẬN LOGIC (HÌNH THỨC x GIAI ĐOẠN) CHUẨN FILE DOCX CỦA BẠN
+            // 2. MA TRẬN LOGIC (HÌNH THỨC x GIAI ĐOẠN)
             const logicTree = {
                 'Dưới 50 triệu': {
                     'Giai đoạn chuẩn bị': [
@@ -348,13 +348,22 @@
             return (
                 <div className="min-h-screen p-4 md:p-8">
                     <div className="max-w-6xl mx-auto">
-                        <header className="mb-6 border-b pb-4 border-slate-200 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                            <div>
-                                <h1 className="text-3xl font-bold text-blue-900 tracking-tight">Hệ thống AutoBid PRO</h1>
-                                <p className="text-slate-500 mt-1">Tự động hóa trộn đa biểu mẫu & Đóng gói ZIP</p>
+                        
+                        {/* HEADER MỚI CHUẨN BRANDING ACV CẦN THƠ */}
+                        <header className="mb-8 bg-[#00529c] rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row md:items-end justify-between border-b-[5px] border-[#d4a026]">
+                            <div className="p-6 md:pb-6">
+                                <h2 className="text-[13px] md:text-sm font-medium text-blue-100 mb-1 uppercase tracking-wide">
+                                    Tổng công ty Cảng hàng không Việt Nam - CTCP
+                                </h2>
+                                <h1 className="text-2xl md:text-[28px] leading-tight font-bold text-white mb-3 uppercase tracking-tight drop-shadow-sm">
+                                    Cảng Hàng không quốc tế Cần Thơ
+                                </h1>
+                                <div className="inline-block bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded text-sm md:text-[15px] font-medium text-white border border-white/10 shadow-inner">
+                                    Phòng Tài chính - Kế hoạch | Hệ thống AutoDocs Mua sắm
+                                </div>
                             </div>
                             
-                            <div className="flex space-x-3">
+                            <div className="p-6 pt-0 md:pt-6 flex space-x-3">
                                 <input 
                                     type="file" 
                                     accept=".json" 
@@ -364,14 +373,14 @@
                                 />
                                 <button 
                                     onClick={() => fileInputRef.current.click()}
-                                    className="bg-white border border-slate-300 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 font-medium py-2 px-4 rounded-lg shadow-sm flex items-center transition-all text-sm"
+                                    className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-medium py-2 px-4 rounded-lg shadow-sm flex items-center transition-all text-sm backdrop-blur-sm"
                                 >
                                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                     Nhập dữ liệu
                                 </button>
                                 <button 
                                     onClick={handleExportData}
-                                    className="bg-white border border-slate-300 text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 font-medium py-2 px-4 rounded-lg shadow-sm flex items-center transition-all text-sm"
+                                    className="bg-white text-[#00529c] hover:bg-blue-50 font-bold py-2 px-4 rounded-lg shadow-md flex items-center transition-all text-sm"
                                 >
                                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4 4l-4-4m0 0l-4-4m4 4V4"></path></svg>
                                     Lưu dữ liệu
@@ -389,31 +398,30 @@
                                     <div className="flex flex-nowrap overflow-x-auto border-b border-slate-200 bg-slate-50">
                                         <button 
                                             onClick={() => setActiveTab('cauhinh')}
-                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'cauhinh' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'cauhinh' ? 'border-[#00529c] text-[#00529c] bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                                         >
-                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'cauhinh' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'}`}>1</span>
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'cauhinh' ? 'bg-[#00529c] text-white' : 'bg-slate-200 text-slate-600'}`}>1</span>
                                             Cấu hình
                                         </button>
                                         <button 
                                             onClick={() => setActiveTab('duan')}
-                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'duan' ? 'border-indigo-600 text-indigo-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'duan' ? 'border-[#00529c] text-[#00529c] bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                                         >
-                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'duan' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-600'}`}>2</span>
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'duan' ? 'bg-[#00529c] text-white' : 'bg-slate-200 text-slate-600'}`}>2</span>
                                             Dự án
                                         </button>
                                         <button 
                                             onClick={() => setActiveTab('goithau')}
-                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'goithau' ? 'border-emerald-600 text-emerald-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'goithau' ? 'border-[#00529c] text-[#00529c] bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                                         >
-                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'goithau' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>3</span>
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'goithau' ? 'bg-[#00529c] text-white' : 'bg-slate-200 text-slate-600'}`}>3</span>
                                             Gói thầu
                                         </button>
-                                        {/* ĐỔI TÊN TAB THÀNH "Ngày tháng Văn bản" */}
                                         <button 
                                             onClick={() => setActiveTab('cancu')}
-                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'cancu' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+                                            className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'cancu' ? 'border-[#00529c] text-[#00529c] bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                                         >
-                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'cancu' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-600'}`}>4</span>
+                                            <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'cancu' ? 'bg-[#00529c] text-white' : 'bg-slate-200 text-slate-600'}`}>4</span>
                                             Ngày tháng Văn bản
                                         </button>
                                     </div>
@@ -427,7 +435,7 @@
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">1.1. Hình thức LCNT <span className="text-red-500">*</span></label>
-                                                    <select name="hinhThucLCNT" value={formData.hinhThucLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
+                                                    <select name="hinhThucLCNT" value={formData.hinhThucLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none bg-blue-50 font-bold text-[#00529c] shadow-sm cursor-pointer transition-colors">
                                                         {Object.keys(logicTree).map(key => (
                                                             <option key={key} value={key}>{key}</option>
                                                         ))}
@@ -435,7 +443,7 @@
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">1.2. Giai đoạn thực hiện <span className="text-red-500">*</span></label>
-                                                    <select name="giaiDoanLCNT" value={formData.giaiDoanLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none bg-blue-50 font-bold text-blue-900 shadow-sm cursor-pointer transition-colors">
+                                                    <select name="giaiDoanLCNT" value={formData.giaiDoanLCNT} onChange={handleInputChange} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none bg-blue-50 font-bold text-[#00529c] shadow-sm cursor-pointer transition-colors">
                                                         {danhSachGiaiDoan.map(step => (
                                                             <option key={step} value={step}>{step}</option>
                                                         ))}
@@ -445,14 +453,14 @@
                                                 {/* DANH SÁCH BIỂU MẪU TỰ ĐỘNG CẬP NHẬT TRONG TAB CẤU HÌNH */}
                                                 <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                                                     <h3 className="text-md font-bold text-slate-700 mb-3 flex items-center">
-                                                        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                        <svg className="w-5 h-5 mr-2 text-[#00529c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                                         Danh mục biểu mẫu sẽ tự động sinh ra theo cấu hình này:
                                                     </h3>
                                                     {currentDocs.length > 0 ? (
                                                         <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                             {currentDocs.map(doc => (
-                                                                <li key={doc.id} className="flex items-start text-sm bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-100 shadow-sm">
-                                                                    <svg className="w-5 h-5 text-blue-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                                <li key={doc.id} className="flex items-start text-sm bg-slate-50 text-slate-700 p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                                    <svg className="w-5 h-5 text-[#00529c] mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                                                     <span className="font-medium">{doc.name}</span>
                                                                 </li>
                                                             ))}
@@ -473,19 +481,19 @@
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="col-span-1 md:col-span-2">
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Tên Dự án <span className="text-red-500">*</span></label>
-                                                    <input type="text" name="tenDuAn" value={formData.tenDuAn} onChange={handleInputChange} placeholder="VD: Xây dựng trường mầm non A" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    <input type="text" name="tenDuAn" value={formData.tenDuAn} onChange={handleInputChange} placeholder="VD: Xây dựng trường mầm non A" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Chủ đầu tư</label>
-                                                    <input type="text" name="chuDauTu" value={formData.chuDauTu} onChange={handleInputChange} placeholder="VD: UBND Huyện B" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    <input type="text" name="chuDauTu" value={formData.chuDauTu} onChange={handleInputChange} placeholder="VD: UBND Huyện B" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Nguồn vốn</label>
-                                                    <input type="text" name="nguonVon" value={formData.nguonVon} onChange={handleInputChange} placeholder="VD: Ngân sách nhà nước" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    <input type="text" name="nguonVon" value={formData.nguonVon} onChange={handleInputChange} placeholder="VD: Ngân sách nhà nước" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Số QĐ Phê duyệt Dự án</label>
-                                                    <input type="text" name="soQuyetDinhDA" value={formData.soQuyetDinhDA} onChange={handleInputChange} placeholder="VD: 123/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    <input type="text" name="soQuyetDinhDA" value={formData.soQuyetDinhDA} onChange={handleInputChange} placeholder="VD: 123/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
                                                 </div>
                                             </div>
                                         </div>
@@ -496,12 +504,12 @@
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="col-span-1 md:col-span-2">
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Tên Gói thầu <span className="text-red-500">*</span></label>
-                                                    <input type="text" name="tenGoiThau" value={formData.tenGoiThau} onChange={handleInputChange} placeholder="VD: Thi công xây lắp hạng mục chính" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    <input type="text" name="tenGoiThau" value={formData.tenGoiThau} onChange={handleInputChange} placeholder="VD: Thi công xây lắp hạng mục chính" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
                                                 </div>
                                                 
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Loại Hợp đồng</label>
-                                                    <select name="loaiHopDong" value={formData.loaiHopDong} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white">
+                                                    <select name="loaiHopDong" value={formData.loaiHopDong} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-[#00529c] outline-none">
                                                         <option value="Trọn gói">Trọn gói</option>
                                                         <option value="Theo đơn giá cố định">Theo đơn giá cố định</option>
                                                         <option value="Theo đơn giá điều chỉnh">Theo đơn giá điều chỉnh</option>
@@ -509,14 +517,14 @@
                                                 </div>
                                                 <div>
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Thời gian thực hiện (ngày)</label>
-                                                    <input type="text" name="thoiGianThucHien" value={formData.thoiGianThucHien} onChange={handleInputChange} placeholder="VD: 120" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    <input type="text" name="thoiGianThucHien" value={formData.thoiGianThucHien} onChange={handleInputChange} placeholder="VD: 120" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
                                                 </div>
 
                                                 <div className="col-span-1 md:col-span-2 border-t border-slate-100 mt-2 pt-4">
                                                     <label className="block text-sm font-medium text-slate-700 mb-1">Tổng mức đầu tư (Giá trị gói thầu) - VNĐ</label>
-                                                    <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleNumberChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 font-semibold text-blue-900 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
+                                                    <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleNumberChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 font-semibold text-[#00529c] border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
                                                     {formData.tongMucDauTu && (
-                                                        <p className="text-sm text-blue-700 mt-2 italic bg-blue-50 p-2 rounded">
+                                                        <p className="text-sm text-[#00529c] mt-2 italic bg-blue-50 p-2 rounded">
                                                             <strong>Bằng chữ:</strong> {docTien(formData.tongMucDauTu)}
                                                         </p>
                                                     )}
@@ -527,7 +535,7 @@
                                                     <div className="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
                                                         <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Nhà thầu</h3>
                                                         <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu (hoặc dự kiến)</label>
-                                                        <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-green-300 rounded-lg focus:ring-2 focus:green-500 outline-none" />
+                                                        <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" />
                                                     </div>
                                                 )}
 
@@ -538,14 +546,14 @@
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <div>
                                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Phương thức LCNT</label>
-                                                                <select name="phuongThucLCNT" value={formData.phuongThucLCNT} onChange={handleInputChange} className="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white outline-none">
+                                                                <select name="phuongThucLCNT" value={formData.phuongThucLCNT} onChange={handleInputChange} className="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-amber-500">
                                                                     <option value="Một giai đoạn một túi hồ sơ">Một giai đoạn một túi hồ sơ</option>
                                                                     <option value="Một giai đoạn hai túi hồ sơ">Một giai đoạn hai túi hồ sơ</option>
                                                                 </select>
                                                             </div>
                                                             <div>
                                                                 <label className="block text-sm font-medium text-slate-700 mb-1">Giá trị Bảo đảm dự thầu (VNĐ)</label>
-                                                                <input type="text" name="soTienDamBaoDuThau" value={formData.soTienDamBaoDuThau} onChange={handleNumberChange} placeholder="VD: 15.000.000" className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:amber-500 outline-none" />
+                                                                <input type="text" name="soTienDamBaoDuThau" value={formData.soTienDamBaoDuThau} onChange={handleNumberChange} placeholder="VD: 15.000.000" className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -562,7 +570,7 @@
                                             <div className="space-y-6">
                                                 {Object.entries(logicTree[formData.hinhThucLCNT] || {}).map(([phaseName, phaseDocs]) => (
                                                     <div key={phaseName} className="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-                                                        <div className="bg-slate-100 px-4 py-3 font-bold text-slate-700 border-b border-slate-200">
+                                                        <div className="bg-slate-100 px-4 py-3 font-bold text-[#00529c] border-b border-slate-200">
                                                             {phaseName}
                                                         </div>
                                                         <div className="p-4 space-y-4">
@@ -579,7 +587,7 @@
                                                                             value={formData[`so_${doc.id}`] || ''} 
                                                                             onChange={handleInputChange} 
                                                                             placeholder="Số văn bản..." 
-                                                                            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:blue-500 outline-none" 
+                                                                            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-[#00529c] outline-none" 
                                                                         />
                                                                     </div>
                                                                     <div className="md:col-span-3">
@@ -588,7 +596,7 @@
                                                                             name={`ngay_${doc.id}`} 
                                                                             value={formData[`ngay_${doc.id}`] || ''} 
                                                                             onChange={handleInputChange} 
-                                                                            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:blue-500 outline-none text-slate-700" 
+                                                                            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-[#00529c] outline-none text-slate-700" 
                                                                         />
                                                                     </div>
                                                                 </div>
@@ -629,7 +637,7 @@
                                             if(activeTab === 'duan') setActiveTab('goithau');
                                             if(activeTab === 'goithau') setActiveTab('cancu');
                                         }}
-                                        className={`px-6 py-2 bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-sm font-bold hover:bg-blue-200 transition-colors ${activeTab === 'cancu' ? 'invisible' : ''}`}
+                                        className={`px-6 py-2 bg-[#00529c] text-white rounded-lg text-sm font-bold hover:bg-blue-800 shadow-md transition-colors ${activeTab === 'cancu' ? 'invisible' : ''}`}
                                     >
                                         Tiếp tục &rarr;
                                     </button>
@@ -639,17 +647,20 @@
 
                             {/* Cột phải: Xuất file */}
                             <div className="lg:col-span-1 space-y-6">
-                                <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 sticky top-4 shadow-sm">
-                                    <h3 className="font-bold text-blue-900 mb-2">Đóng gói Hồ sơ</h3>
-                                    <p className="text-sm text-blue-700 mb-4">
+                                <div className="bg-white p-6 rounded-xl border border-slate-200 sticky top-4 shadow-sm">
+                                    <h3 className="font-bold text-[#00529c] mb-2 text-lg">Đóng gói Hồ sơ</h3>
+                                    <p className="text-sm text-slate-600 mb-4">
                                         Hệ thống sẽ trộn dữ liệu vào <strong>{currentDocs.length} biểu mẫu</strong> 
-                                        <br/>(của hình thức <span className="font-semibold underline">{formData.hinhThucLCNT}</span> - <span className="font-semibold">{formData.giaiDoanLCNT}</span>) và nén thành 1 file .ZIP.
+                                        <br/>(của hình thức <span className="font-semibold text-slate-800">{formData.hinhThucLCNT}</span> - <span className="font-semibold text-slate-800">{formData.giaiDoanLCNT}</span>) và nén thành 1 file .ZIP.
                                     </p>
                                     
                                     {currentDocs.length > 0 ? (
-                                        <ul className="text-xs text-blue-800 mb-6 space-y-1">
+                                        <ul className="text-xs text-slate-700 mb-6 space-y-2">
                                             {currentDocs.map(doc => (
-                                                <li key={doc.id}>✓ {doc.name}</li>
+                                                <li key={doc.id} className="flex items-start">
+                                                    <svg className="w-4 h-4 text-green-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                    {doc.name}
+                                                </li>
                                             ))}
                                         </ul>
                                     ) : (
@@ -661,9 +672,22 @@
                                     <button 
                                         onClick={generateDocument}
                                         disabled={isGenerating || currentDocs.length === 0}
-                                        className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex justify-center items-center ${(isGenerating || currentDocs.length === 0) ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                        className={`w-full text-white font-bold py-3 px-4 rounded-lg shadow-md transition-all flex justify-center items-center ${(isGenerating || currentDocs.length === 0) ? 'bg-slate-400 cursor-not-allowed' : 'bg-[#00529c] hover:bg-blue-800 hover:shadow-lg'}`}
                                     >
-                                        {isGenerating ? 'Đang tạo & nén ZIP...' : `Xuất File .ZIP Hồ Sơ`}
+                                        {isGenerating ? (
+                                            <span className="flex items-center">
+                                                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Đang tạo & nén ZIP...
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center">
+                                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                Xuất File .ZIP Hồ Sơ
+                                            </span>
+                                        )}
                                     </button>
                                 </div>
                             </div>
