@@ -96,11 +96,8 @@
                 thoiGianThucHien: '', 
                 tenNhaThau: '', 
                 phuongThucLCNT: 'Một giai đoạn một túi hồ sơ', 
-                soTienDamBaoDuThau: '', 
-                soToTrinh: '',
-                ngayToTrinh: '',
-                soQuyetDinh: '',
-                ngayQuyetDinh: ''
+                soTienDamBaoDuThau: ''
+                // Các biến Số và Ngày tháng giờ sẽ được lưu động (dynamic) theo ID văn bản
             });
 
             const [activeTab, setActiveTab] = React.useState('cauhinh'); 
@@ -202,7 +199,6 @@
 
             // Xác định danh sách file hiển thị ở giao diện DỰA VÀO LỰA CHỌN
             const currentFormLogic = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
-            // Lấy danh sách các Giai đoạn động (Vì Đấu thầu rộng rãi có 6 giai đoạn, loại khác chỉ có 2)
             const danhSachGiaiDoan = Object.keys(currentFormLogic);
             const currentDocs = currentFormLogic[formData.giaiDoanLCNT] || [];
 
@@ -213,7 +209,6 @@
                 setFormData(prevData => {
                     const newData = { ...prevData, [name]: value };
                     
-                    // NẾU THAY ĐỔI HÌNH THỨC THẦU -> PHẢI TỰ ĐỘNG RESET LẠI GIAI ĐOẠN HIỆN TẠI
                     if (name === 'hinhThucLCNT') {
                         const availablePhases = Object.keys(logicTree[value] || logicTree['Chỉ định thầu rút gọn']);
                         newData.giaiDoanLCNT = availablePhases[0];
@@ -250,7 +245,6 @@
                         const importedData = JSON.parse(event.target.result);
                         setFormData(prevData => {
                             const updatedData = { ...prevData, ...importedData };
-                            // Đảm bảo giai đoạn hợp lệ khi load json
                             if (updatedData.hinhThucLCNT) {
                                 const validPhases = Object.keys(logicTree[updatedData.hinhThucLCNT]);
                                 if (!validPhases.includes(updatedData.giaiDoanLCNT)) {
@@ -302,22 +296,23 @@
                             const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
                             // TÍNH TOÁN CÁC BIẾN PHÁI SINH
+                            const dynamicDates = {};
+                            Object.keys(formData).forEach(key => {
+                                // Quét toàn bộ dữ liệu, nếu là trường ngày tháng (bắt đầu bằng ngay_) thì sinh ra các biến dịch
+                                if (key.startsWith('ngay_')) {
+                                    dynamicDates[`${key}Full`] = formatNgay(formData[key], 'full');
+                                    dynamicDates[`${key}Short`] = formatNgay(formData[key], 'short');
+                                    dynamicDates[`${key}_d`] = formatNgay(formData[key], 'd');
+                                    dynamicDates[`${key}_m`] = formatNgay(formData[key], 'm');
+                                    dynamicDates[`${key}_y`] = formatNgay(formData[key], 'y');
+                                }
+                            });
+
                             const dataToRender = {
                                 ...formData,
                                 tongMucDauTuBangChu: docTien(formData.tongMucDauTu),
                                 soTienDamBaoDuThauBangChu: docTien(formData.soTienDamBaoDuThau), 
-                                
-                                ngayToTrinhFull: formatNgay(formData.ngayToTrinh, 'full'),
-                                ngayToTrinhShort: formatNgay(formData.ngayToTrinh, 'short'),
-                                ngayToTrinh_d: formatNgay(formData.ngayToTrinh, 'd'),
-                                ngayToTrinh_m: formatNgay(formData.ngayToTrinh, 'm'),
-                                ngayToTrinh_y: formatNgay(formData.ngayToTrinh, 'y'),
-
-                                ngayQuyetDinhFull: formatNgay(formData.ngayQuyetDinh, 'full'),
-                                ngayQuyetDinhShort: formatNgay(formData.ngayQuyetDinh, 'short'),
-                                ngayQuyetDinh_d: formatNgay(formData.ngayQuyetDinh, 'd'),
-                                ngayQuyetDinh_m: formatNgay(formData.ngayQuyetDinh, 'm'),
-                                ngayQuyetDinh_y: formatNgay(formData.ngayQuyetDinh, 'y')
+                                ...dynamicDates
                             };
 
                             doc.render(dataToRender); 
@@ -413,12 +408,13 @@
                                             <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'goithau' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>3</span>
                                             Gói thầu
                                         </button>
+                                        {/* ĐỔI TÊN TAB THÀNH "Ngày tháng Văn bản" */}
                                         <button 
                                             onClick={() => setActiveTab('cancu')}
                                             className={`flex-shrink-0 py-3 px-5 font-semibold text-sm border-b-2 transition-colors flex items-center ${activeTab === 'cancu' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
                                         >
                                             <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center mr-2 text-xs ${activeTab === 'cancu' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-600'}`}>4</span>
-                                            Căn cứ pháp lý
+                                            Ngày tháng Văn bản
                                         </button>
                                     </div>
 
@@ -558,29 +554,57 @@
                                             </div>
                                         </div>
 
-                                        {/* TAB 4: CĂN CỨ PHÁP LÝ */}
+                                        {/* TAB 4: NGÀY THÁNG VĂN BẢN (THIẾT KẾ ĐỘNG MỚI) */}
                                         <div className={activeTab === 'cancu' ? 'block' : 'hidden'}>
-                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">4. Thông Văn bản liên quan (Căn cứ)</h2>
-                                            <p className="text-sm text-slate-500 mb-4">Nhập các thông tin này để làm "Căn cứ pháp lý" cho các văn bản sinh ra phía sau.</p>
+                                            <h2 className="text-xl font-semibold mb-2 text-slate-700 border-b pb-2">4. Ngày tháng & Số hiệu Văn bản</h2>
+                                            <p className="text-sm text-slate-500 mb-6">Nhập Số và Ngày tháng cho toàn bộ các văn bản thuộc quy trình <strong>{formData.hinhThucLCNT}</strong>. Các thông tin này sẽ tự động liên kết làm căn cứ cho các bước sau.</p>
                                             
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số Tờ trình / Công văn</label>
-                                                    <input type="text" name="soToTrinh" value={formData.soToTrinh} onChange={handleInputChange} placeholder="VD: 15/TTr-BQL" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Ngày tháng</label>
-                                                    <input type="date" name="ngayToTrinh" value={formData.ngayToTrinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
-                                                </div>
-
-                                                <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Số Quyết định liên quan</label>
-                                                    <input type="text" name="soQuyetDinh" value={formData.soQuyetDinh} onChange={handleInputChange} placeholder="VD: 128/QĐ-UBND" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none" />
-                                                </div>
-                                                <div className="mt-2 md:mt-0 border-t md:border-t-0 border-slate-100 pt-2 md:pt-0">
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Ngày Quyết định</label>
-                                                    <input type="date" name="ngayQuyetDinh" value={formData.ngayQuyetDinh} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:blue-500 outline-none text-slate-700" />
-                                                </div>
+                                            <div className="space-y-6">
+                                                {Object.entries(logicTree[formData.hinhThucLCNT] || {}).map(([phaseName, phaseDocs]) => (
+                                                    <div key={phaseName} className="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                                                        <div className="bg-slate-100 px-4 py-3 font-bold text-slate-700 border-b border-slate-200">
+                                                            {phaseName}
+                                                        </div>
+                                                        <div className="p-4 space-y-4">
+                                                            {phaseDocs.map(doc => (
+                                                                <div key={doc.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                                                                    <div className="md:col-span-6 font-medium text-sm text-slate-800 leading-snug">
+                                                                        {doc.name}
+                                                                        <span className="block text-xs text-slate-400 font-normal mt-1">(Mã biến: {doc.id})</span>
+                                                                    </div>
+                                                                    <div className="md:col-span-3">
+                                                                        <input 
+                                                                            type="text" 
+                                                                            name={`so_${doc.id}`} 
+                                                                            value={formData[`so_${doc.id}`] || ''} 
+                                                                            onChange={handleInputChange} 
+                                                                            placeholder="Số văn bản..." 
+                                                                            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:blue-500 outline-none" 
+                                                                        />
+                                                                    </div>
+                                                                    <div className="md:col-span-3">
+                                                                        <input 
+                                                                            type="date" 
+                                                                            name={`ngay_${doc.id}`} 
+                                                                            value={formData[`ngay_${doc.id}`] || ''} 
+                                                                            onChange={handleInputChange} 
+                                                                            className="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:blue-500 outline-none text-slate-700" 
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            
+                                            <div className="mt-6 bg-amber-50 p-4 rounded-lg border border-amber-200 text-sm text-amber-800 shadow-sm">
+                                                <strong>💡 Hướng dẫn chèn biến vào Word:</strong>
+                                                <ul className="list-disc ml-5 mt-2 space-y-1">
+                                                    <li>Để in ra "Số văn bản", hãy gõ: <code className="bg-amber-100 px-1 rounded font-mono font-bold text-amber-900">{`{so_mã_biến}`}</code></li>
+                                                    <li>Để in ra "Ngày tháng năm", hãy gõ: <code className="bg-amber-100 px-1 rounded font-mono font-bold text-amber-900">{`{ngay_mã_biếnFull}`}</code></li>
+                                                    <li><strong>Ví dụ:</strong> Nếu muốn Căn cứ vào Quyết định mua sắm (Mã: <strong>d50_1</strong>), bạn gõ vào Word như sau: <br/><i className="text-amber-700 mt-1 block border-l-2 border-amber-400 pl-2">"Căn cứ Quyết định số <strong>{`{so_d50_1}`}</strong> <strong>{`{ngay_d50_1Full}`}</strong> về việc phê duyệt mua sắm..."</i></li>
+                                                </ul>
                                             </div>
                                         </div>
 
@@ -615,7 +639,7 @@
 
                             {/* Cột phải: Xuất file */}
                             <div className="lg:col-span-1 space-y-6">
-                                <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 sticky top-4">
+                                <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 sticky top-4 shadow-sm">
                                     <h3 className="font-bold text-blue-900 mb-2">Đóng gói Hồ sơ</h3>
                                     <p className="text-sm text-blue-700 mb-4">
                                         Hệ thống sẽ trộn dữ liệu vào <strong>{currentDocs.length} biểu mẫu</strong> 
