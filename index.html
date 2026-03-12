@@ -101,119 +101,115 @@
 
             const [activeTab, setActiveTab] = React.useState('cauhinh'); 
             const [isGenerating, setIsGenerating] = React.useState(false);
-            const [generatingDocId, setGeneratingDocId] = React.useState(null); // Biến theo dõi ID của file đang tải lẻ
+            const [generatingDocId, setGeneratingDocId] = React.useState(null);
             const fileInputRef = React.useRef(null);
 
-            // 2. MA TRẬN LOGIC (HÌNH THỨC x GIAI ĐOẠN)
+            // 2. MA TRẬN LOGIC ĐÃ TÁCH RIÊNG TÊN FILE HOÀN TOÀN (CẬP NHẬT 48 FILE)
             const logicTree = {
                 'Dưới 50 triệu': {
                     'Giai đoạn chuẩn bị': [
-                        { id: 'd50_1', name: '01. Tờ trình phê duyệt chủ trương', filename: '01_ToTrinhChuTruong.docx' },
-                        { id: 'd50_2', name: '02. Báo cáo mua sắm dưới 50 triệu', filename: '02_BaoCaoMuaSam_D50.docx' }
+                        { id: 'd50_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'd50_01_ToTrinhChuTruong.docx' },
+                        { id: 'd50_2', name: '02. Báo cáo mua sắm dưới 50 triệu', filename: 'd50_02_BaoCaoMuaSam.docx' }
                     ],
                     'Giai đoạn thực hiện': [
-                        { id: 'd50_3', name: '03. Hợp đồng', filename: '03_HopDong.docx' }
+                        { id: 'd50_3', name: '03. Hợp đồng', filename: 'd50_03_HopDong.docx' }
                     ]
                 },
                 'Chào giá hạn chế': {
                     'Giai đoạn chuẩn bị': [
-                        { id: 'cghc_1', name: '01. Tờ trình phê duyệt chủ trương', filename: '01_ToTrinhChuTruong.docx' },
-                        { id: 'cghc_2', name: '02. Báo cáo mua sắm dưới chào giá hạn chế', filename: '02_BaoCaoMuaSam_CGHC.docx' },
-                        { id: 'cghc_3', name: '03. Thông báo mời chào giá', filename: '03_ThongBaoMoiChaoGia.docx' }
+                        { id: 'cghc_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'cghc_01_ToTrinhChuTruong.docx' },
+                        { id: 'cghc_2', name: '02. Báo cáo mua sắm dưới chào giá hạn chế', filename: 'cghc_02_BaoCaoMuaSam.docx' },
+                        { id: 'cghc_3', name: '03. Thông báo mời chào giá', filename: 'cghc_03_ThongBaoMoiChaoGia.docx' }
                     ],
                     'Giai đoạn thực hiện': [
-                        { id: 'cghc_4', name: '04. Biên bản mở thư chào giá', filename: '04_BB_MoThuChaoGia.docx' },
-                        { id: 'cghc_5', name: '05. Biên bản đánh giá hồ sơ chào giá', filename: '05_BB_DanhGiaHSCG.docx' },
-                        { id: 'cghc_6', name: '06. Biên bản thương thảo hợp đồng', filename: '06_BB_ThuongThaoHD.docx' },
-                        { id: 'cghc_7', name: '07. Báo cáo đánh giá hồ sơ chào giá', filename: '07_BC_DanhGiaHSCG.docx' },
-                        { id: 'cghc_8', name: '08. Thông báo Kết quả chào giá', filename: '08_TB_KQLCNT.docx' },
-                        { id: 'cghc_9', name: '09. Hợp đồng', filename: '09_HopDong.docx' }
+                        { id: 'cghc_4', name: '04. Biên bản mở thư chào giá', filename: 'cghc_04_BB_MoThuChaoGia.docx' },
+                        { id: 'cghc_5', name: '05. Biên bản đánh giá hồ sơ chào giá', filename: 'cghc_05_BB_DanhGiaHSCG.docx' },
+                        { id: 'cghc_6', name: '06. Biên bản thương thảo hợp đồng', filename: 'cghc_06_BB_ThuongThaoHD.docx' },
+                        { id: 'cghc_7', name: '07. Báo cáo đánh giá hồ sơ chào giá', filename: 'cghc_07_BC_DanhGiaHSCG.docx' },
+                        { id: 'cghc_8', name: '08. Thông báo Kết quả chào giá', filename: 'cghc_08_TB_KQLCNT.docx' },
+                        { id: 'cghc_9', name: '09. Hợp đồng', filename: 'cghc_09_HopDong.docx' }
                     ]
                 },
                 'Chào giá rộng rãi': {
                     'Giai đoạn chuẩn bị': [
-                        { id: 'cgrr_1', name: '01. Tờ trình phê duyệt chủ trương', filename: '01_ToTrinhChuTruong.docx' },
-                        { id: 'cgrr_2', name: '02. Báo cáo mua sắm dưới chào giá rộng rãi', filename: '02_BaoCaoMuaSam_CGRR.docx' },
-                        { id: 'cgrr_3', name: '03. Thông báo mời chào giá', filename: '03_ThongBaoMoiChaoGia.docx' },
-                        { id: 'cgrr_4', name: '04. Nội dung đăng báo địa phương', filename: '04_NoiDungDangBao.docx' }
+                        { id: 'cgrr_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'cgrr_01_ToTrinhChuTruong.docx' },
+                        { id: 'cgrr_2', name: '02. Báo cáo mua sắm dưới chào giá rộng rãi', filename: 'cgrr_02_BaoCaoMuaSam.docx' },
+                        { id: 'cgrr_3', name: '03. Thông báo mời chào giá', filename: 'cgrr_03_ThongBaoMoiChaoGia.docx' },
+                        { id: 'cgrr_4', name: '04. Nội dung đăng báo địa phương', filename: 'cgrr_04_NoiDungDangBao.docx' }
                     ],
                     'Giai đoạn thực hiện': [
-                        { id: 'cgrr_5', name: '05. Biên bản mở thư chào giá', filename: '05_BB_MoThuChaoGia.docx' },
-                        { id: 'cgrr_6', name: '06. Biên bản đánh giá hồ sơ chào giá', filename: '06_BB_DanhGiaHSCG.docx' },
-                        { id: 'cgrr_7', name: '07. Biên bản thương thảo hợp đồng', filename: '07_BB_ThuongThaoHD.docx' },
-                        { id: 'cgrr_8', name: '08. Báo cáo đánh giá hồ sơ chào giá', filename: '08_BC_DanhGiaHSCG.docx' },
-                        { id: 'cgrr_9', name: '09. Thông báo Kết quả chào giá', filename: '09_TB_KQLCNT.docx' },
-                        { id: 'cgrr_10', name: '10. Hợp đồng', filename: '10_HopDong.docx' }
+                        { id: 'cgrr_5', name: '05. Biên bản mở thư chào giá', filename: 'cgrr_05_BB_MoThuChaoGia.docx' },
+                        { id: 'cgrr_6', name: '06. Biên bản đánh giá hồ sơ chào giá', filename: 'cgrr_06_BB_DanhGiaHSCG.docx' },
+                        { id: 'cgrr_7', name: '07. Biên bản thương thảo hợp đồng', filename: 'cgrr_07_BB_ThuongThaoHD.docx' },
+                        { id: 'cgrr_8', name: '08. Báo cáo đánh giá hồ sơ chào giá', filename: 'cgrr_08_BC_DanhGiaHSCG.docx' },
+                        { id: 'cgrr_9', name: '09. Thông báo Kết quả chào giá', filename: 'cgrr_09_TB_KQLCNT.docx' },
+                        { id: 'cgrr_10', name: '10. Hợp đồng', filename: 'cgrr_10_HopDong.docx' }
                     ]
                 },
                 'Chỉ định thầu rút gọn': {
                     'Giai đoạn chuẩn bị': [
-                        { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt Kế hoạch LCNT', filename: '01_ToTrinh_KHLCNT.docx' },
-                        { id: 'cdtrg_2', name: '02. Quyết định phê duyệt Kế hoạch LCNT', filename: '02_QD_KHLCNT.docx' },
-                        { id: 'cdtrg_3', name: '03. Công văn gửi Nhà thầu mời thương thảo', filename: '03_CV_MoiThuongThao.docx' }
+                        { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt Kế hoạch LCNT', filename: 'cdtrg_01_ToTrinh_KHLCNT.docx' },
+                        { id: 'cdtrg_2', name: '02. Quyết định phê duyệt Kế hoạch LCNT', filename: 'cdtrg_02_QD_KHLCNT.docx' },
+                        { id: 'cdtrg_3', name: '03. Công văn gửi Nhà thầu mời thương thảo', filename: 'cdtrg_03_CV_MoiThuongThao.docx' }
                     ],
                     'Giai đoạn thực hiện': [
-                        { id: 'cdtrg_4', name: '04. Biên bản thương thảo hợp đồng', filename: '04_BB_ThuongThaoHD.docx' },
-                        { id: 'cdtrg_5', name: '05. Thông báo kết quả Chỉ định thầu', filename: '05_TB_KQLCNT.docx' },
-                        { id: 'cdtrg_6', name: '06. Hợp đồng', filename: '06_HopDong.docx' }
+                        { id: 'cdtrg_4', name: '04. Biên bản thương thảo hợp đồng', filename: 'cdtrg_04_BB_ThuongThaoHD.docx' },
+                        { id: 'cdtrg_5', name: '05. Thông báo kết quả Chỉ định thầu', filename: 'cdtrg_05_TB_KQLCNT.docx' },
+                        { id: 'cdtrg_6', name: '06. Hợp đồng', filename: 'cdtrg_06_HopDong.docx' }
                     ]
                 },
                 'Đấu thầu rộng rãi': {
                     'Giai đoạn Chuẩn bị Hồ sơ mời thầu (E-HSMT)': [
-                        { id: 'dtrr_1', name: '01. Quyết định thành lập Tổ chuyên gia và Tổ thẩm định', filename: '01_QD_ThanhLapTo.docx' },
-                        { id: 'dtrr_2', name: '02. Biên bản họp Tổ chuyên gia (thông qua E-HSMT)', filename: '02_BB_HopTCG.docx' },
-                        { id: 'dtrr_3', name: '03. Tờ trình đề nghị thẩm định, phê duyệt E-HSMT', filename: '03_TTr_PheDuyetHSMT.docx' },
-                        { id: 'dtrr_4', name: '04. Biên bản họp Tổ thẩm định', filename: '04_BB_HopTTD.docx' },
-                        { id: 'dtrr_5', name: '05. Báo cáo thẩm định E-HSMT', filename: '05_BC_ThamDinhHSMT.docx' },
-                        { id: 'dtrr_6', name: '06. Quyết định phê duyệt E-HSMT', filename: '06_QD_PheDuyetHSMT.docx' }
+                        { id: 'dtrr_1', name: '01. Quyết định thành lập Tổ chuyên gia và Tổ thẩm định', filename: 'dtrr_01_QD_ThanhLapTo.docx' },
+                        { id: 'dtrr_2', name: '02. Biên bản họp Tổ chuyên gia (thông qua E-HSMT)', filename: 'dtrr_02_BB_HopTCG.docx' },
+                        { id: 'dtrr_3', name: '03. Tờ trình đề nghị thẩm định, phê duyệt E-HSMT', filename: 'dtrr_03_TTr_PheDuyetHSMT.docx' },
+                        { id: 'dtrr_4', name: '04. Biên bản họp Tổ thẩm định', filename: 'dtrr_04_BB_HopTTD.docx' },
+                        { id: 'dtrr_5', name: '05. Báo cáo thẩm định E-HSMT', filename: 'dtrr_05_BC_ThamDinhHSMT.docx' },
+                        { id: 'dtrr_6', name: '06. Quyết định phê duyệt E-HSMT', filename: 'dtrr_06_QD_PheDuyetHSMT.docx' }
                     ],
                     'Giai đoạn Tổ chức Lựa chọn nhà thầu': [
-                        { id: 'dtrr_7', name: '07. Thông báo mời thầu (TBMT)', filename: '07_ThongBaoMoiThau.docx' },
-                        { id: 'dtrr_8', name: '08. Văn bản làm rõ E-HSMT (nếu có)', filename: '08_VB_LamRoHSMT.docx' },
-                        { id: 'dtrr_9', name: '09. Quyết định sửa đổi E-HSMT (nếu có)', filename: '09_QD_SuaDoiHSMT.docx' },
-                        { id: 'dtrr_10', name: '10. Biên bản mở thầu', filename: '10_BB_MoThau.docx' }
+                        { id: 'dtrr_7', name: '07. Thông báo mời thầu (TBMT)', filename: 'dtrr_07_ThongBaoMoiThau.docx' },
+                        { id: 'dtrr_8', name: '08. Văn bản làm rõ E-HSMT (nếu có)', filename: 'dtrr_08_VB_LamRoHSMT.docx' },
+                        { id: 'dtrr_9', name: '09. Quyết định sửa đổi E-HSMT (nếu có)', filename: 'dtrr_09_QD_SuaDoiHSMT.docx' },
+                        { id: 'dtrr_10', name: '10. Biên bản mở thầu', filename: 'dtrr_10_BB_MoThau.docx' }
                     ],
                     'Giai đoạn Đánh giá Hồ sơ dự thầu (E-HSDT)': [
-                        { id: 'dtrr_11', name: '11. Biên bản họp Tổ chuyên gia (phân công nhiệm vụ)', filename: '11_BB_HopTCG_PhanCong.docx' },
-                        { id: 'dtrr_12', name: '12. Văn bản yêu cầu làm rõ E-HSDT (nếu có)', filename: '12_VB_LamRoHSDT.docx' },
-                        { id: 'dtrr_13', name: '13. Biên bản họp Tổ chuyên gia (thông qua kết quả)', filename: '13_BB_HopTCG_KetQua.docx' },
-                        { id: 'dtrr_14', name: '14. Báo cáo đánh giá E-HSDT', filename: '14_BC_DanhGiaHSDT.docx' }
+                        { id: 'dtrr_11', name: '11. Biên bản họp Tổ chuyên gia (phân công nhiệm vụ)', filename: 'dtrr_11_BB_HopTCG_PhanCong.docx' },
+                        { id: 'dtrr_12', name: '12. Văn bản yêu cầu làm rõ E-HSDT (nếu có)', filename: 'dtrr_12_VB_LamRoHSDT.docx' },
+                        { id: 'dtrr_13', name: '13. Biên bản họp Tổ chuyên gia (thông qua kết quả)', filename: 'dtrr_13_BB_HopTCG_KetQua.docx' },
+                        { id: 'dtrr_14', name: '14. Báo cáo đánh giá E-HSDT', filename: 'dtrr_14_BC_DanhGiaHSDT.docx' }
                     ],
                     'Giai đoạn Thương thảo và Hoàn thiện hợp đồng': [
-                        { id: 'dtrr_15', name: '15. Văn bản mời thương thảo/hoàn thiện hợp đồng', filename: '15_VB_MoiThuongThao.docx' },
-                        { id: 'dtrr_16', name: '16. Biên bản thương thảo hợp đồng', filename: '16_BB_ThuongThaoHD.docx' },
-                        { id: 'dtrr_17', name: '17. Biên bản hoàn thiện hợp đồng', filename: '17_BB_HoanThienHD.docx' }
+                        { id: 'dtrr_15', name: '15. Văn bản mời thương thảo/hoàn thiện hợp đồng', filename: 'dtrr_15_VB_MoiThuongThao.docx' },
+                        { id: 'dtrr_16', name: '16. Biên bản thương thảo hợp đồng', filename: 'dtrr_16_BB_ThuongThaoHD.docx' },
+                        { id: 'dtrr_17', name: '17. Biên bản hoàn thiện hợp đồng', filename: 'dtrr_17_BB_HoanThienHD.docx' }
                     ],
                     'Giai đoạn Thẩm định và Phê duyệt Kết quả LCNT': [
-                        { id: 'dtrr_18', name: '18. Tờ trình đề nghị thẩm định, phê duyệt Kết quả LCNT', filename: '18_TTr_PheDuyetKQLCNT.docx' },
-                        { id: 'dtrr_19', name: '19. Biên bản họp Tổ thẩm định', filename: '19_BB_HopTTD_KQLCNT.docx' },
-                        { id: 'dtrr_20', name: '20. Báo cáo thẩm định Kết quả LCNT', filename: '20_BC_ThamDinhKQLCNT.docx' },
-                        { id: 'dtrr_21', name: '21. Quyết định phê duyệt Kết quả LCNT', filename: '21_QD_PheDuyetKQLCNT.docx' }
+                        { id: 'dtrr_18', name: '18. Tờ trình đề nghị thẩm định, phê duyệt Kết quả LCNT', filename: 'dtrr_18_TTr_PheDuyetKQLCNT.docx' },
+                        { id: 'dtrr_19', name: '19. Biên bản họp Tổ thẩm định', filename: 'dtrr_19_BB_HopTTD_KQLCNT.docx' },
+                        { id: 'dtrr_20', name: '20. Báo cáo thẩm định Kết quả LCNT', filename: 'dtrr_20_BC_ThamDinhKQLCNT.docx' },
+                        { id: 'dtrr_21', name: '21. Quyết định phê duyệt Kết quả LCNT', filename: 'dtrr_21_QD_PheDuyetKQLCNT.docx' }
                     ],
                     'Giai đoạn Công khai và Ký kết hợp đồng': [
-                        { id: 'dtrr_22', name: '22. Thông báo Kết quả LCNT', filename: '22_TB_KQLCNT.docx' },
-                        { id: 'dtrr_23', name: '23. Hợp đồng kinh tế', filename: '23_HopDong.docx' }
+                        { id: 'dtrr_22', name: '22. Thông báo Kết quả LCNT', filename: 'dtrr_22_TB_KQLCNT.docx' },
+                        { id: 'dtrr_23', name: '23. Hợp đồng kinh tế', filename: 'dtrr_23_HopDong.docx' }
                     ]
                 }
             };
 
-            // Xác định danh sách file hiển thị ở giao diện DỰA VÀO LỰA CHỌN
             const currentFormLogic = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'];
             const danhSachGiaiDoan = Object.keys(currentFormLogic);
             const currentDocs = currentFormLogic[formData.giaiDoanLCNT] || [];
 
-            // HÀM XỬ LÝ KHI NHẬP/CHỌN DỮ LIỆU THAY ĐỔI
             const handleInputChange = (e) => {
                 const { name, value } = e.target;
                 
                 setFormData(prevData => {
                     const newData = { ...prevData, [name]: value };
-                    
                     if (name === 'hinhThucLCNT') {
                         const availablePhases = Object.keys(logicTree[value] || logicTree['Chỉ định thầu rút gọn']);
                         newData.giaiDoanLCNT = availablePhases[0];
                     }
-                    
                     return newData;
                 });
             };
@@ -222,10 +218,7 @@
                 const { name, value } = e.target;
                 let rawValue = value.replace(/\D/g, ''); 
                 let formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
-                setFormData({
-                    ...formData,
-                    [name]: formattedValue
-                });
+                setFormData({ ...formData, [name]: formattedValue });
             };
 
             const handleExportData = () => {
@@ -262,25 +255,31 @@
                 e.target.value = null; 
             };
 
-            // NÂNG CẤP: HÀM TẠO VÀ TẢI DUY NHẤT 1 FILE
+            // HÀM TẠO FILE LẺ ĐÃ ĐƯỢC FIX LỖI
             const generateSingleDocument = async (docInfo) => {
                 if (!formData.tenDuAn || !formData.tenGoiThau) {
                     alert("Vui lòng nhập Tên dự án và Tên gói thầu trước khi tải biểu mẫu!");
                     return;
                 }
 
-                setGeneratingDocId(docInfo.id); // Kích hoạt hiệu ứng loading cho file này
+                setGeneratingDocId(docInfo.id); 
 
                 try {
                     const response = await fetch('./' + docInfo.filename);
                     if (!response.ok) {
-                        throw new Error(`Không tìm thấy file mẫu "${docInfo.filename}" trên máy chủ. Bạn vui lòng kiểm tra lại GitHub.`);
+                        throw new Error(`Không tìm thấy file mẫu "${docInfo.filename}" trên GitHub. Vui lòng kiểm tra lại tên file.`);
                     }
                     const arrayBuffer = await response.arrayBuffer();
-                    const zip = new window.PizZip(arrayBuffer);
+                    
+                    let zip;
+                    try {
+                        zip = new window.PizZip(arrayBuffer);
+                    } catch (zipError) {
+                        throw new Error(`Tải thất bại! File "${docInfo.filename}" bị lỗi hoặc không phải định dạng Word (.docx).`);
+                    }
+
                     const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-                    // TÍNH TOÁN CÁC BIẾN PHÁI SINH
                     const dynamicDates = {};
                     Object.keys(formData).forEach(key => {
                         if (key.startsWith('ngay_')) {
@@ -306,7 +305,6 @@
                         mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     });
 
-                    // Làm sạch tên file (Bỏ đoạn "01. " ở đầu cho đẹp)
                     let cleanDocName = docInfo.name.replace(/^[0-9.]+\s*/, '');
                     saveAs(docBlob, `${cleanDocName}_${formData.tenGoiThau.replace(/\s+/g, '_')}.docx`);
 
@@ -314,7 +312,7 @@
                     console.error(`Lỗi khi tạo file lẻ ${docInfo.filename}:`, err);
                     alert(err.message);
                 } finally {
-                    setGeneratingDocId(null); // Tắt hiệu ứng loading
+                    setGeneratingDocId(null); 
                 }
             };
 
@@ -332,26 +330,33 @@
                     }
 
                     const currentDocsToGen = currentDocs; 
-                    
                     if (currentDocsToGen.length === 0) {
                         throw new Error(`Chưa có biểu mẫu nào được cấu hình cho phần ${formData.hinhThucLCNT} - ${formData.giaiDoanLCNT}.`);
                     }
 
                     const zipArchive = new window.JSZip();
                     let successCount = 0;
+                    let errorFiles = [];
                     
                     for (const docInfo of currentDocsToGen) {
                         try {
                             const response = await fetch('./' + docInfo.filename);
                             if (!response.ok) {
-                                console.warn(`Bỏ qua ${docInfo.filename} vì không tìm thấy trên server.`);
+                                errorFiles.push(docInfo.filename);
                                 continue; 
                             }
                             const arrayBuffer = await response.arrayBuffer();
-                            const zip = new window.PizZip(arrayBuffer);
+                            
+                            let zip;
+                            try {
+                                zip = new window.PizZip(arrayBuffer);
+                            } catch (e) {
+                                errorFiles.push(docInfo.filename);
+                                continue;
+                            }
+
                             const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-                            // TÍNH TOÁN CÁC BIẾN PHÁI SINH
                             const dynamicDates = {};
                             Object.keys(formData).forEach(key => {
                                 if (key.startsWith('ngay_')) {
@@ -386,7 +391,11 @@
                     }
 
                     if (successCount === 0) {
-                        throw new Error("Không thể tạo được file nào. Vui lòng kiểm tra lại xem bạn đã tải các file Word mẫu lên GitHub chưa?");
+                        throw new Error("Không tải được file nào. Đảm bảo bạn đã upload các file Word có tên chính xác lên GitHub.");
+                    }
+
+                    if (errorFiles.length > 0) {
+                        alert(`Đã nén thành công ${successCount} file.\n\nTuy nhiên, các file sau bị bỏ qua do chưa có trên GitHub hoặc sai định dạng:\n- ${errorFiles.join('\n- ')}`);
                     }
 
                     const content = await zipArchive.generateAsync({ type: "blob" });
@@ -413,7 +422,7 @@
                                 <h1 className="text-[12.5px] md:text-[14.5px] leading-tight font-bold text-white mb-2 uppercase tracking-tight drop-shadow-sm">
                                     Cảng Hàng không quốc tế Cần Thơ
                                 </h1>
-                                <div className="inline-block bg-white/20 backdrop-blur-sm px-2.5 py-0.5 rounded text-[12px] md:text-[13px] font-medium text-white border border-white/10 shadow-inner">
+                                <div className="inline-block bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded text-[12px] md:text-[13px] font-medium text-white border border-white/10 shadow-inner">
                                     Phòng TC-KH | HT AutoDocs Mua sắm
                                 </div>
                             </div>
