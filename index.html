@@ -107,20 +107,22 @@
             const fileInputRef = React.useRef(null);
 
             // ==========================================
-            // 2. TỰ ĐỘNG TẢI CONFIG VÀ DICTIONARY TỪ WORKER
+            // 2. TẢI CONFIG VÀ DICTIONARY TỪ JSON (THEO HƯỚNG DẪN MỚI)
             // ==========================================
             React.useEffect(() => {
-                fetch('https://autodocs-proxy.hhminh71.workers.dev/api/config')
+                // Gọi API từ Worker (cửa /api/config trả về JSON)
+                fetch(`${WORKER_URL}/api/config`)
                     .then(res => {
-                        if (!res.ok) throw new Error(`Mã lỗi từ Server: ${res.status} ${res.statusText}`);
-                        return res.json(); 
-                    }) 
+                        if (!res.ok) throw new Error("Không thể kết nối với trạm Cloudflare");
+                        return res.json(); // Đọc dữ liệu dạng JSON
+                    })
                     .then(data => {
-                        // A. XỬ LÝ TỪ ĐIỂN BIẾN
+                        // 1. XỬ LÝ TỪ ĐIỂN BIẾN (Tab TuDienBien)
                         if (data.dictionary) {
                             const dictRows = data.dictionary.split('\n').filter(r => r.trim());
                             const dictMap = {};
-                            for(let i = 1; i < dictRows.length; i++) {
+                            // Chạy từ dòng 1 bỏ qua tiêu đề
+                            for (let i = 1; i < dictRows.length; i++) {
                                 const cols = dictRows[i].split(',');
                                 if (cols.length >= 2) {
                                     dictMap[cols[0].trim()] = cols[1].trim();
@@ -129,10 +131,11 @@
                             setDictionary(dictMap);
                         }
 
-                        // B. XỬ LÝ CẤU HÌNH BIỂU MẪU
+                        // 2. XỬ LÝ CẤU HÌNH BIỂU MẪU (Tab AutoDocs_Config)
                         if (data.config) {
                             const configRows = data.config.split('\n').filter(r => r.trim());
                             const newLogicTree = {};
+                            
                             for (let i = 1; i < configRows.length; i++) {
                                 const cols = configRows[i].split(',');
                                 if (cols.length < 5) continue;
@@ -142,15 +145,19 @@
                                 const id = cols[2].trim();
                                 const name = cols[3].trim();
                                 const fileId = cols[4].trim();
+                                
+                                // Đọc danh sách biến từ cột F (index 5), tách bằng dấu chấm phẩy
                                 const variables = cols[5] ? cols[5].split(';').map(v => v.trim()).filter(v => v) : [];
                                 
                                 if (!newLogicTree[hinhThuc]) newLogicTree[hinhThuc] = {};
                                 if (!newLogicTree[hinhThuc][giaiDoan]) newLogicTree[hinhThuc][giaiDoan] = [];
+                                
                                 newLogicTree[hinhThuc][giaiDoan].push({ id, name, fileId, variables });
                             }
                             
                             setLogicTree(newLogicTree);
                             
+                            // Tự động chọn giá trị mặc định cho Form
                             const firstHinhThuc = Object.keys(newLogicTree)[0];
                             if (firstHinhThuc) {
                                 const firstGiaiDoan = Object.keys(newLogicTree[firstHinhThuc])[0];
@@ -165,12 +172,9 @@
                         setIsSystemLoading(false);
                     })
                     .catch(err => {
-                        console.error("Lỗi khi tải cấu hình:", err);
-                        if (err.message.includes('Failed to fetch')) {
-                            setSystemError('Lỗi kết nối (CORS) hoặc Mạng. Trạm Cloudflare Worker từ chối quyền truy cập hoặc đang bị lỗi nội bộ.');
-                        } else {
-                            setSystemError(err.message);
-                        }
+                        console.error("Lỗi khởi động:", err);
+                        // Hiển thị thông báo lỗi chi tiết
+                        setSystemError(err.message);
                         setIsSystemLoading(false);
                     });
             }, []);
@@ -272,7 +276,8 @@
                         response = await fetch('./' + docInfo.filename);
                         if (!response.ok) throw new Error(`Không tìm thấy file mẫu "${docInfo.filename}" trên GitHub.`);
                     } else {
-                        const proxyUrl = `https://autodocs-proxy.hhminh71.workers.dev/?fileId=${docInfo.fileId}&t=${new Date().getTime()}`;
+                        // Thêm tham số t để phá Cache
+                        const proxyUrl = `${WORKER_URL}/?fileId=${docInfo.fileId}&t=${new Date().getTime()}`;
                         response = await fetch(proxyUrl);
                         if (!response.ok) throw new Error(`Cloudflare từ chối kết nối hoặc không tìm thấy file.`);
                     }
@@ -326,7 +331,7 @@
                                 response = await fetch('./' + docInfo.filename);
                                 if (!response.ok) { errorFiles.push(`${docInfo.name} (Thiếu file GitHub)`); continue; }
                             } else {
-                                const proxyUrl = `https://autodocs-proxy.hhminh71.workers.dev/?fileId=${docInfo.fileId}&t=${new Date().getTime()}`;
+                                const proxyUrl = `${WORKER_URL}/?fileId=${docInfo.fileId}&t=${new Date().getTime()}`;
                                 response = await fetch(proxyUrl);
                                 if (!response.ok) { errorFiles.push(`${docInfo.name} (Lỗi Cloudflare)`); continue; }
                             }
@@ -499,7 +504,6 @@
                                                 {dynamicFields.map(field => (
                                                     <div key={field} className="flex flex-col">
                                                         <label className="text-sm font-semibold text-slate-700 mb-1">
-                                                            {/* 3. Hiển thị Label bằng tên từ điển (theo đúng hướng dẫn) */}
                                                             {dictionary[field] || field}
                                                         </label>
                                                         <input 
