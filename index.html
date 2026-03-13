@@ -118,64 +118,71 @@
             // 2. TỰ ĐỘNG TẢI CONFIG TỪ GOOGLE SHEETS
             // ==========================================
             React.useEffect(() => {
-                const loadConfigFromSheets = async () => {
-                    try {
-                        const csvUrl = 'https://autodocs-proxy.hhminh71.workers.dev/api/config';
-                        const response = await fetch(csvUrl);
-                        
-                        if (!response.ok) throw new Error(`Mã lỗi từ Server: ${response.status} ${response.statusText}`);
-                        
-                        const data = await response.json();
-                        
-                        if (!Array.isArray(data) || data.length === 0) {
-                            throw new Error('Dữ liệu từ Google Sheets rỗng. Vui lòng kiểm tra lại bảng cấu hình.');
+                // 1. Gọi đường dẫn API cấu hình (Cửa 1 của Worker)
+                const csvUrl = 'https://autodocs-proxy.hhminh71.workers.dev/api/config';
+                
+                fetch(csvUrl)
+                    // 2. CHỖ NÀY QUAN TRỌNG NHẤT: Bắt buộc dùng .text() để đọc file CSV
+                    .then(res => {
+                        if (!res.ok) {
+                            throw new Error(`Mã lỗi từ Server: ${res.status} ${res.statusText}`);
+                        }
+                        return res.text();
+                    }) 
+                    .then(csvText => {
+                        // Kiểm tra xem dữ liệu trả về có bị lỗi không (nếu nó trả về JSON báo lỗi)
+                        if (csvText.startsWith('{') || csvText.startsWith('[')) {
+                            throw new Error("Dữ liệu trả về bị sai định dạng, không phải CSV.");
                         }
 
-                        // Parse dữ liệu từ Sheets (phẳng) thành dạng Cây rẽ nhánh
-                        const newTree = {};
-                        data.forEach(item => {
-                            const { HinhThuc, GiaiDoan, MaBien, TenBieuMau, FileID } = item;
-                            if (!HinhThuc || !GiaiDoan) return;
-                            
-                            if (!newTree[HinhThuc]) newTree[HinhThuc] = {};
-                            if (!newTree[HinhThuc][GiaiDoan]) newTree[HinhThuc][GiaiDoan] = [];
-                            
-                            newTree[HinhThuc][GiaiDoan].push({
-                                id: MaBien,
-                                name: TenBieuMau,
-                                fileId: FileID
-                            });
-                        });
+                        // 3. Tách từng dòng dữ liệu
+                        const rows = csvText.split('\n').filter(row => row.trim() !== '');
+                        const newLogicTree = {};
                         
-                        setLogicTree(newTree);
+                        // 4. Quét từ dòng thứ 2 (bỏ dòng tiêu đề HinhThuc,GiaiDoan...)
+                        for (let i = 1; i < rows.length; i++) {
+                            const cols = rows[i].split(',');
+                            if (cols.length < 5) continue; // Bỏ qua nếu dòng bị thiếu cột
+                            
+                            const hinhThuc = cols[0].trim();
+                            const giaiDoan = cols[1].trim();
+                            const id = cols[2].trim();
+                            const name = cols[3].trim();
+                            const fileId = cols[4].trim(); 
+                            
+                            if (!newLogicTree[hinhThuc]) newLogicTree[hinhThuc] = {};
+                            if (!newLogicTree[hinhThuc][giaiDoan]) newLogicTree[hinhThuc][giaiDoan] = [];
+                            
+                            newLogicTree[hinhThuc][giaiDoan].push({ id, name, fileId });
+                        }
                         
-                        // Set dropdown về tùy chọn đầu tiên
-                        const firstHinhThuc = Object.keys(newTree)[0];
+                        if (Object.keys(newLogicTree).length === 0) {
+                            throw new Error("Không thể phân tích dữ liệu CSV hoặc dữ liệu trống.");
+                        }
+
+                        // Cập nhật cấu hình vào hệ thống
+                        setLogicTree(newLogicTree);
+                        setIsSystemLoading(false);
+                        
+                        // Tự động chọn Hình thức và Giai đoạn đầu tiên
+                        const firstHinhThuc = Object.keys(newLogicTree)[0];
                         if (firstHinhThuc) {
-                            const firstGiaiDoan = Object.keys(newTree[firstHinhThuc])[0];
                             setFormData(prev => ({
                                 ...prev,
                                 hinhThucLCNT: firstHinhThuc,
-                                giaiDoanLCNT: firstGiaiDoan
+                                giaiDoanLCNT: Object.keys(newLogicTree[firstHinhThuc])[0]
                             }));
                         }
-
-                        setIsSystemLoading(false);
-                    } catch (err) {
-                        console.error("Lỗi khởi tạo hệ thống:", err);
-                        
-                        if (err.message.includes('400')) {
-                            setSystemError('Lỗi 400 (Bad Request): Cloudflare Worker từ chối xử lý yêu cầu. Vui lòng kiểm tra lại mã nguồn Worker của bạn xem đã cấu hình đúng đường dẫn "/api/config" chưa.');
-                        } else if (err.message.includes('Failed to fetch')) {
-                            setSystemError('Lỗi kết nối (CORS) hoặc Mạng. Trạm Cloudflare Worker từ chối quyền truy cập hoặc đang bị lỗi nội bộ. Vui lòng kiểm tra lại cấu hình Headers CORS trên Worker.');
+                    })
+                    .catch(err => {
+                        console.error("Lỗi khi tải cấu hình:", err);
+                        if (err.message.includes('Failed to fetch')) {
+                            setSystemError('Lỗi kết nối (CORS) hoặc Mạng. Trạm Cloudflare Worker từ chối quyền truy cập hoặc đang bị lỗi nội bộ.');
                         } else {
                             setSystemError(err.message);
                         }
-                        setIsSystemLoading(false);
-                    }
-                };
-
-                loadConfigFromSheets();
+                        setIsSystemLoading(false); 
+                    });
             }, []);
 
             // HÀM BỎ QUA LỖI ĐỂ DÙNG CẤU HÌNH MẶC ĐỊNH LƯU TRÚ (Cứu hộ khi đứt cáp/lỗi server)
