@@ -375,7 +375,8 @@
                         }
                     } else {
                         // Kéo file từ Cloudflare Worker
-                        const proxyUrl = `https://autodocs-proxy.hhminh71.workers.dev/?fileId=${docInfo.fileId}`;
+                        // Thêm tham số thời gian thực (t) vào đuôi để phá Cache
+                        const proxyUrl = `https://autodocs-proxy.hhminh71.workers.dev/?fileId=${docInfo.fileId}&t=${new Date().getTime()}`;
                         response = await fetch(proxyUrl);
                         if (!response.ok) {
                             throw new Error(`Cloudflare từ chối kết nối hoặc không tìm thấy file có ID: ${docInfo.fileId}`);
@@ -461,7 +462,8 @@
                                     continue; 
                                 }
                             } else {
-                                const proxyUrl = `https://autodocs-proxy.hhminh71.workers.dev/?fileId=${docInfo.fileId}`;
+                                // Thêm tham số thời gian thực (t) vào đuôi để phá Cache
+                                const proxyUrl = `https://autodocs-proxy.hhminh71.workers.dev/?fileId=${docInfo.fileId}&t=${new Date().getTime()}`;
                                 response = await fetch(proxyUrl);
                                 if (!response.ok) {
                                     errorFiles.push(`${docInfo.name} (Lỗi API Cloudflare)`);
