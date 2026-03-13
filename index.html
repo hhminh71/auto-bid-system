@@ -141,8 +141,9 @@
                         
                         // 4. Quét từ dòng thứ 2 (bỏ dòng tiêu đề HinhThuc,GiaiDoan...)
                         for (let i = 1; i < rows.length; i++) {
+                            // Lưu ý: Nếu bạn dùng dấu chấm phẩy ; để ngăn cách biến thì code này sẽ chạy hoàn hảo
                             const cols = rows[i].split(',');
-                            if (cols.length < 5) continue; // Bỏ qua nếu dòng bị thiếu cột
+                            if (cols.length < 5) continue;
                             
                             const hinhThuc = cols[0].trim();
                             const giaiDoan = cols[1].trim();
@@ -150,10 +151,18 @@
                             const name = cols[3].trim();
                             const fileId = cols[4].trim(); 
                             
+                            // Đọc cột thứ 6 (Danh sách biến). Nếu không có thì để mảng rỗng []
+                            // Tách các biến bằng dấu chấm phẩy hoặc khoảng trắng
+                            let variables = [];
+                            if (cols[5]) {
+                                // Tách bằng dấu chấm phẩy (;), loại bỏ khoảng trắng dư thừa
+                                variables = cols[5].split(';').map(v => v.trim()).filter(v => v !== '');
+                            }
+                            
                             if (!newLogicTree[hinhThuc]) newLogicTree[hinhThuc] = {};
                             if (!newLogicTree[hinhThuc][giaiDoan]) newLogicTree[hinhThuc][giaiDoan] = [];
                             
-                            newLogicTree[hinhThuc][giaiDoan].push({ id, name, fileId });
+                            newLogicTree[hinhThuc][giaiDoan].push({ id, name, fileId, variables });
                         }
                         
                         if (Object.keys(newLogicTree).length === 0) {
@@ -190,91 +199,91 @@
                 const fallbackTree = {
                     'Dưới 50 triệu': {
                         'Giai đoạn chuẩn bị': [
-                            { id: 'd50_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'd50_01_ToTrinhChuTruong.docx' },
-                            { id: 'd50_2', name: '02. Báo cáo mua sắm dưới 50 triệu', filename: 'd50_02_BaoCaoMuaSam.docx' }
+                            { id: 'd50_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'd50_01_ToTrinhChuTruong.docx', variables: [] },
+                            { id: 'd50_2', name: '02. Báo cáo mua sắm dưới 50 triệu', filename: 'd50_02_BaoCaoMuaSam.docx', variables: [] }
                         ],
                         'Giai đoạn thực hiện': [
-                            { id: 'd50_3', name: '03. Hợp đồng', filename: 'd50_03_HopDong.docx' }
+                            { id: 'd50_3', name: '03. Hợp đồng', filename: 'd50_03_HopDong.docx', variables: [] }
                         ]
                     },
                     'Chào giá hạn chế': {
                         'Giai đoạn chuẩn bị': [
-                            { id: 'cghc_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'cghc_01_ToTrinhChuTruong.docx' },
-                            { id: 'cghc_2', name: '02. Báo cáo mua sắm dưới chào giá hạn chế', filename: 'cghc_02_BaoCaoMuaSam.docx' },
-                            { id: 'cghc_3', name: '03. Thông báo mời chào giá', filename: 'cghc_03_ThongBaoMoiChaoGia.docx' }
+                            { id: 'cghc_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'cghc_01_ToTrinhChuTruong.docx', variables: [] },
+                            { id: 'cghc_2', name: '02. Báo cáo mua sắm dưới chào giá hạn chế', filename: 'cghc_02_BaoCaoMuaSam.docx', variables: [] },
+                            { id: 'cghc_3', name: '03. Thông báo mời chào giá', filename: 'cghc_03_ThongBaoMoiChaoGia.docx', variables: [] }
                         ],
                         'Giai đoạn thực hiện': [
-                            { id: 'cghc_4', name: '04. Biên bản mở thư chào giá', filename: 'cghc_04_BB_MoThuChaoGia.docx' },
-                            { id: 'cghc_5', name: '05. Biên bản đánh giá hồ sơ chào giá', filename: 'cghc_05_BB_DanhGiaHSCG.docx' },
-                            { id: 'cghc_6', name: '06. Biên bản thương thảo hợp đồng', filename: 'cghc_06_BB_ThuongThaoHD.docx' },
-                            { id: 'cghc_7', name: '07. Báo cáo đánh giá hồ sơ chào giá', filename: 'cghc_07_BC_DanhGiaHSCG.docx' },
-                            { id: 'cghc_8', name: '08. Thông báo Kết quả chào giá', filename: 'cghc_08_TB_KQLCNT.docx' },
-                            { id: 'cghc_9', name: '09. Hợp đồng', filename: 'cghc_09_HopDong.docx' }
+                            { id: 'cghc_4', name: '04. Biên bản mở thư chào giá', filename: 'cghc_04_BB_MoThuChaoGia.docx', variables: [] },
+                            { id: 'cghc_5', name: '05. Biên bản đánh giá hồ sơ chào giá', filename: 'cghc_05_BB_DanhGiaHSCG.docx', variables: [] },
+                            { id: 'cghc_6', name: '06. Biên bản thương thảo hợp đồng', filename: 'cghc_06_BB_ThuongThaoHD.docx', variables: [] },
+                            { id: 'cghc_7', name: '07. Báo cáo đánh giá hồ sơ chào giá', filename: 'cghc_07_BC_DanhGiaHSCG.docx', variables: [] },
+                            { id: 'cghc_8', name: '08. Thông báo Kết quả chào giá', filename: 'cghc_08_TB_KQLCNT.docx', variables: [] },
+                            { id: 'cghc_9', name: '09. Hợp đồng', filename: 'cghc_09_HopDong.docx', variables: [] }
                         ]
                     },
                     'Chào giá rộng rãi': {
                         'Giai đoạn chuẩn bị': [
-                            { id: 'cgrr_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'cgrr_01_ToTrinhChuTruong.docx' },
-                            { id: 'cgrr_2', name: '02. Báo cáo mua sắm dưới chào giá rộng rãi', filename: 'cgrr_02_BaoCaoMuaSam.docx' },
-                            { id: 'cgrr_3', name: '03. Thông báo mời chào giá', filename: 'cgrr_03_ThongBaoMoiChaoGia.docx' },
-                            { id: 'cgrr_4', name: '04. Nội dung đăng báo địa phương', filename: 'cgrr_04_NoiDungDangBao.docx' }
+                            { id: 'cgrr_1', name: '01. Tờ trình phê duyệt chủ trương', filename: 'cgrr_01_ToTrinhChuTruong.docx', variables: [] },
+                            { id: 'cgrr_2', name: '02. Báo cáo mua sắm dưới chào giá rộng rãi', filename: 'cgrr_02_BaoCaoMuaSam.docx', variables: [] },
+                            { id: 'cgrr_3', name: '03. Thông báo mời chào giá', filename: 'cgrr_03_ThongBaoMoiChaoGia.docx', variables: [] },
+                            { id: 'cgrr_4', name: '04. Nội dung đăng báo địa phương', filename: 'cgrr_04_NoiDungDangBao.docx', variables: [] }
                         ],
                         'Giai đoạn thực hiện': [
-                            { id: 'cgrr_5', name: '05. Biên bản mở thư chào giá', filename: 'cgrr_05_BB_MoThuChaoGia.docx' },
-                            { id: 'cgrr_6', name: '06. Biên bản đánh giá hồ sơ chào giá', filename: 'cgrr_06_BB_DanhGiaHSCG.docx' },
-                            { id: 'cgrr_7', name: '07. Biên bản thương thảo hợp đồng', filename: 'cgrr_07_BB_ThuongThaoHD.docx' },
-                            { id: 'cgrr_8', name: '08. Báo cáo đánh giá hồ sơ chào giá', filename: 'cgrr_08_BC_DanhGiaHSCG.docx' },
-                            { id: 'cgrr_9', name: '09. Thông báo Kết quả chào giá', filename: 'cgrr_09_TB_KQLCNT.docx' },
-                            { id: 'cgrr_10', name: '10. Hợp đồng', filename: 'cgrr_10_HopDong.docx' }
+                            { id: 'cgrr_5', name: '05. Biên bản mở thư chào giá', filename: 'cgrr_05_BB_MoThuChaoGia.docx', variables: [] },
+                            { id: 'cgrr_6', name: '06. Biên bản đánh giá hồ sơ chào giá', filename: 'cgrr_06_BB_DanhGiaHSCG.docx', variables: [] },
+                            { id: 'cgrr_7', name: '07. Biên bản thương thảo hợp đồng', filename: 'cgrr_07_BB_ThuongThaoHD.docx', variables: [] },
+                            { id: 'cgrr_8', name: '08. Báo cáo đánh giá hồ sơ chào giá', filename: 'cgrr_08_BC_DanhGiaHSCG.docx', variables: [] },
+                            { id: 'cgrr_9', name: '09. Thông báo Kết quả chào giá', filename: 'cgrr_09_TB_KQLCNT.docx', variables: [] },
+                            { id: 'cgrr_10', name: '10. Hợp đồng', filename: 'cgrr_10_HopDong.docx', variables: [] }
                         ]
                     },
                     'Chỉ định thầu rút gọn': {
                         'Giai đoạn chuẩn bị': [
-                            { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt Kế hoạch LCNT', filename: 'cdtrg_01_ToTrinh_KHLCNT.docx' },
-                            { id: 'cdtrg_2', name: '02. Quyết định phê duyệt Kế hoạch LCNT', filename: 'cdtrg_02_QD_KHLCNT.docx' },
-                            { id: 'cdtrg_3', name: '03. Công văn gửi Nhà thầu mời thương thảo', filename: 'cdtrg_03_CV_MoiThuongThao.docx' }
+                            { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt Kế hoạch LCNT', filename: 'cdtrg_01_ToTrinh_KHLCNT.docx', variables: [] },
+                            { id: 'cdtrg_2', name: '02. Quyết định phê duyệt Kế hoạch LCNT', filename: 'cdtrg_02_QD_KHLCNT.docx', variables: [] },
+                            { id: 'cdtrg_3', name: '03. Công văn gửi Nhà thầu mời thương thảo', filename: 'cdtrg_03_CV_MoiThuongThao.docx', variables: [] }
                         ],
                         'Giai đoạn thực hiện': [
-                            { id: 'cdtrg_4', name: '04. Biên bản thương thảo hợp đồng', filename: 'cdtrg_04_BB_ThuongThaoHD.docx' },
-                            { id: 'cdtrg_5', name: '05. Thông báo kết quả Chỉ định thầu', filename: 'cdtrg_05_TB_KQLCNT.docx' },
-                            { id: 'cdtrg_6', name: '06. Hợp đồng', filename: 'cdtrg_06_HopDong.docx' }
+                            { id: 'cdtrg_4', name: '04. Biên bản thương thảo hợp đồng', filename: 'cdtrg_04_BB_ThuongThaoHD.docx', variables: [] },
+                            { id: 'cdtrg_5', name: '05. Thông báo kết quả Chỉ định thầu', filename: 'cdtrg_05_TB_KQLCNT.docx', variables: [] },
+                            { id: 'cdtrg_6', name: '06. Hợp đồng', filename: 'cdtrg_06_HopDong.docx', variables: [] }
                         ]
                     },
                     'Đấu thầu rộng rãi': {
                         'Giai đoạn Chuẩn bị Hồ sơ mời thầu (E-HSMT)': [
-                            { id: 'dtrr_1', name: '01. Quyết định thành lập Tổ chuyên gia và Tổ thẩm định', filename: 'dtrr_01_QD_ThanhLapTo.docx' },
-                            { id: 'dtrr_2', name: '02. Biên bản họp Tổ chuyên gia (thông qua E-HSMT)', filename: 'dtrr_02_BB_HopTCG.docx' },
-                            { id: 'dtrr_3', name: '03. Tờ trình đề nghị thẩm định, phê duyệt E-HSMT', filename: 'dtrr_03_TTr_PheDuyetHSMT.docx' },
-                            { id: 'dtrr_4', name: '04. Biên bản họp Tổ thẩm định', filename: 'dtrr_04_BB_HopTTD.docx' },
-                            { id: 'dtrr_5', name: '05. Báo cáo thẩm định E-HSMT', filename: 'dtrr_05_BC_ThamDinhHSMT.docx' },
-                            { id: 'dtrr_6', name: '06. Quyết định phê duyệt E-HSMT', filename: 'dtrr_06_QD_PheDuyetHSMT.docx' }
+                            { id: 'dtrr_1', name: '01. Quyết định thành lập Tổ chuyên gia và Tổ thẩm định', filename: 'dtrr_01_QD_ThanhLapTo.docx', variables: [] },
+                            { id: 'dtrr_2', name: '02. Biên bản họp Tổ chuyên gia (thông qua E-HSMT)', filename: 'dtrr_02_BB_HopTCG.docx', variables: [] },
+                            { id: 'dtrr_3', name: '03. Tờ trình đề nghị thẩm định, phê duyệt E-HSMT', filename: 'dtrr_03_TTr_PheDuyetHSMT.docx', variables: [] },
+                            { id: 'dtrr_4', name: '04. Biên bản họp Tổ thẩm định', filename: 'dtrr_04_BB_HopTTD.docx', variables: [] },
+                            { id: 'dtrr_5', name: '05. Báo cáo thẩm định E-HSMT', filename: 'dtrr_05_BC_ThamDinhHSMT.docx', variables: [] },
+                            { id: 'dtrr_6', name: '06. Quyết định phê duyệt E-HSMT', filename: 'dtrr_06_QD_PheDuyetHSMT.docx', variables: [] }
                         ],
                         'Giai đoạn Tổ chức Lựa chọn nhà thầu': [
-                            { id: 'dtrr_7', name: '07. Thông báo mời thầu (TBMT)', filename: 'dtrr_07_ThongBaoMoiThau.docx' },
-                            { id: 'dtrr_8', name: '08. Văn bản làm rõ E-HSMT (nếu có)', filename: 'dtrr_08_VB_LamRoHSMT.docx' },
-                            { id: 'dtrr_9', name: '09. Quyết định sửa đổi E-HSMT (nếu có)', filename: 'dtrr_09_QD_SuaDoiHSMT.docx' },
-                            { id: 'dtrr_10', name: '10. Biên bản mở thầu', filename: 'dtrr_10_BB_MoThau.docx' }
+                            { id: 'dtrr_7', name: '07. Thông báo mời thầu (TBMT)', filename: 'dtrr_07_ThongBaoMoiThau.docx', variables: [] },
+                            { id: 'dtrr_8', name: '08. Văn bản làm rõ E-HSMT (nếu có)', filename: 'dtrr_08_VB_LamRoHSMT.docx', variables: [] },
+                            { id: 'dtrr_9', name: '09. Quyết định sửa đổi E-HSMT (nếu có)', filename: 'dtrr_09_QD_SuaDoiHSMT.docx', variables: [] },
+                            { id: 'dtrr_10', name: '10. Biên bản mở thầu', filename: 'dtrr_10_BB_MoThau.docx', variables: [] }
                         ],
                         'Giai đoạn Đánh giá Hồ sơ dự thầu (E-HSDT)': [
-                            { id: 'dtrr_11', name: '11. Biên bản họp Tổ chuyên gia (phân công nhiệm vụ)', filename: 'dtrr_11_BB_HopTCG_PhanCong.docx' },
-                            { id: 'dtrr_12', name: '12. Văn bản yêu cầu làm rõ E-HSDT (nếu có)', filename: 'dtrr_12_VB_LamRoHSDT.docx' },
-                            { id: 'dtrr_13', name: '13. Biên bản họp Tổ chuyên gia (thông qua kết quả)', filename: 'dtrr_13_BB_HopTCG_KetQua.docx' },
-                            { id: 'dtrr_14', name: '14. Báo cáo đánh giá E-HSDT', filename: 'dtrr_14_BC_DanhGiaHSDT.docx' }
+                            { id: 'dtrr_11', name: '11. Biên bản họp Tổ chuyên gia (phân công nhiệm vụ)', filename: 'dtrr_11_BB_HopTCG_PhanCong.docx', variables: [] },
+                            { id: 'dtrr_12', name: '12. Văn bản yêu cầu làm rõ E-HSDT (nếu có)', filename: 'dtrr_12_VB_LamRoHSDT.docx', variables: [] },
+                            { id: 'dtrr_13', name: '13. Biên bản họp Tổ chuyên gia (thông qua kết quả)', filename: 'dtrr_13_BB_HopTCG_KetQua.docx', variables: [] },
+                            { id: 'dtrr_14', name: '14. Báo cáo đánh giá E-HSDT', filename: 'dtrr_14_BC_DanhGiaHSDT.docx', variables: [] }
                         ],
                         'Giai đoạn Thương thảo và Hoàn thiện hợp đồng': [
-                            { id: 'dtrr_15', name: '15. Văn bản mời thương thảo/hoàn thiện hợp đồng', filename: 'dtrr_15_VB_MoiThuongThao.docx' },
-                            { id: 'dtrr_16', name: '16. Biên bản thương thảo hợp đồng', filename: 'dtrr_16_BB_ThuongThaoHD.docx' },
-                            { id: 'dtrr_17', name: '17. Biên bản hoàn thiện hợp đồng', filename: 'dtrr_17_BB_HoanThienHD.docx' }
+                            { id: 'dtrr_15', name: '15. Văn bản mời thương thảo/hoàn thiện hợp đồng', filename: 'dtrr_15_VB_MoiThuongThao.docx', variables: [] },
+                            { id: 'dtrr_16', name: '16. Biên bản thương thảo hợp đồng', filename: 'dtrr_16_BB_ThuongThaoHD.docx', variables: [] },
+                            { id: 'dtrr_17', name: '17. Biên bản hoàn thiện hợp đồng', filename: 'dtrr_17_BB_HoanThienHD.docx', variables: [] }
                         ],
                         'Giai đoạn Thẩm định và Phê duyệt Kết quả LCNT': [
-                            { id: 'dtrr_18', name: '18. Tờ trình đề nghị thẩm định, phê duyệt Kết quả LCNT', filename: 'dtrr_18_TTr_PheDuyetKQLCNT.docx' },
-                            { id: 'dtrr_19', name: '19. Biên bản họp Tổ thẩm định', filename: 'dtrr_19_BB_HopTTD_KQLCNT.docx' },
-                            { id: 'dtrr_20', name: '20. Báo cáo thẩm định Kết quả LCNT', filename: 'dtrr_20_BC_ThamDinhKQLCNT.docx' },
-                            { id: 'dtrr_21', name: '21. Quyết định phê duyệt Kết quả LCNT', filename: 'dtrr_21_QD_PheDuyetKQLCNT.docx' }
+                            { id: 'dtrr_18', name: '18. Tờ trình đề nghị thẩm định, phê duyệt Kết quả LCNT', filename: 'dtrr_18_TTr_PheDuyetKQLCNT.docx', variables: [] },
+                            { id: 'dtrr_19', name: '19. Biên bản họp Tổ thẩm định', filename: 'dtrr_19_BB_HopTTD_KQLCNT.docx', variables: [] },
+                            { id: 'dtrr_20', name: '20. Báo cáo thẩm định Kết quả LCNT', filename: 'dtrr_20_BC_ThamDinhKQLCNT.docx', variables: [] },
+                            { id: 'dtrr_21', name: '21. Quyết định phê duyệt Kết quả LCNT', filename: 'dtrr_21_QD_PheDuyetKQLCNT.docx', variables: [] }
                         ],
                         'Giai đoạn Công khai và Ký kết hợp đồng': [
-                            { id: 'dtrr_22', name: '22. Thông báo Kết quả LCNT', filename: 'dtrr_22_TB_KQLCNT.docx' },
-                            { id: 'dtrr_23', name: '23. Hợp đồng kinh tế', filename: 'dtrr_23_HopDong.docx' }
+                            { id: 'dtrr_22', name: '22. Thông báo Kết quả LCNT', filename: 'dtrr_22_TB_KQLCNT.docx', variables: [] },
+                            { id: 'dtrr_23', name: '23. Hợp đồng kinh tế', filename: 'dtrr_23_HopDong.docx', variables: [] }
                         ]
                     }
                 };
@@ -291,6 +300,33 @@
             const currentFormLogic = logicTree[formData.hinhThucLCNT] || {};
             const danhSachGiaiDoan = Object.keys(currentFormLogic);
             const currentDocs = currentFormLogic[formData.giaiDoanLCNT] || [];
+
+            // ==========================================
+            // THUẬT TOÁN TÌM CÁC BIẾN CẦN THIẾT CHO CỤM LCNT HIỆN TẠI
+            // ==========================================
+            const requiredVariables = new Set(); // Dùng Set để tự động loại bỏ các biến trùng nhau (ví dụ 2 file đều có tenGoiThau)
+
+            currentDocs.forEach(doc => {
+                if (doc.variables) {
+                    doc.variables.forEach(v => requiredVariables.add(v));
+                }
+            });
+
+            // Chuyển Set thành Array để React dễ vẽ giao diện
+            const dynamicFields = Array.from(requiredVariables);
+
+            // TỪ ĐIỂN DỊCH TÊN BIẾN (Làm đẹp giao diện)
+            // Trong Word bạn đặt tên biến là {tenGoiThau}, nhưng lên Web phải hiển thị là "Tên gói thầu" cho đẹp.
+            const fieldDictionary = {
+                "tenGoiThau": "Tên gói thầu",
+                "loaiHopDong": "Loại hợp đồng",
+                "thoiGianThucHien": "Thời gian thực hiện (ngày)",
+                "mucDauTu": "Tổng mức đầu tư (VNĐ)",
+                "tenNhaThau": "Tên Nhà thầu (hoặc dự kiến)",
+                "chuDauTu": "Tên Chủ đầu tư",
+                "ngayThang": "Ngày tháng năm lập văn bản"
+                // Bạn cứ khai báo thêm các biến khác ở đây...
+            };
 
             // ==========================================
             // 3. CÁC HÀM XỬ LÝ SỰ KIỆN FORM
@@ -711,7 +747,7 @@
                                                                     title="Nhấn để tải và trộn dữ liệu riêng file này"
                                                                 >
                                                                     {/* KHÔNG BÁO LỖI ĐỎ NẾU DÙNG DỮ LIỆU OFFLINE (CHƯA CÓ FILE ID) */}
-                                                                    {(!doc.fileId || doc.fileId.trim() === '') && !formData.hinhThucLCNT.includes('(Offline)') && (
+                                                                    {(!doc.fileId || doc.fileId.trim() === '') && formData.hinhThucLCNT && !formData.hinhThucLCNT.includes('(Offline)') && (
                                                                          <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-bl-lg font-bold">Thiếu ID</span>
                                                                     )}
                                                                     
@@ -721,7 +757,7 @@
                                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                                         </svg>
                                                                     ) : (
-                                                                        <svg className={`w-5 h-5 mr-2 shrink-0 ${(!doc.fileId || doc.fileId.trim() === '') && !formData.hinhThucLCNT.includes('(Offline)') ? 'text-red-400' : 'text-[#00529c]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                                        <svg className={`w-5 h-5 mr-2 shrink-0 ${(!doc.fileId || doc.fileId.trim() === '') && formData.hinhThucLCNT && !formData.hinhThucLCNT.includes('(Offline)') ? 'text-red-400' : 'text-[#00529c]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                                                     )}
                                                                     <span className="font-medium flex-1 pr-4">{doc.name}</span>
                                                                     <svg className="w-4 h-4 text-slate-400 group-hover:text-[#00529c] ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -761,68 +797,35 @@
                                             </div>
                                         </div>
 
-                                        {/* TAB 3: GÓI THẦU */}
+                                        {/* TAB 3: GÓI THẦU (ĐÃ CHUYỂN SANG ĐỘNG BẰNG MAP) */}
                                         <div className={activeTab === 'goithau' ? 'block' : 'hidden'}>
-                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">3. Chi tiết Gói thầu</h2>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="col-span-1 md:col-span-2">
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tên Gói thầu <span className="text-red-500">*</span></label>
-                                                    <input type="text" name="tenGoiThau" value={formData.tenGoiThau} onChange={handleInputChange} placeholder="VD: Thi công xây lắp hạng mục chính" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
-                                                </div>
-                                                
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Loại Hợp đồng</label>
-                                                    <select name="loaiHopDong" value={formData.loaiHopDong} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-[#00529c] outline-none">
-                                                        <option value="Trọn gói">Trọn gói</option>
-                                                        <option value="Theo đơn giá cố định">Theo đơn giá cố định</option>
-                                                        <option value="Theo đơn giá điều chỉnh">Theo đơn giá điều chỉnh</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Thời gian thực hiện (ngày)</label>
-                                                    <input type="text" name="thoiGianThucHien" value={formData.thoiGianThucHien} onChange={handleInputChange} placeholder="VD: 120" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
-                                                </div>
-
-                                                <div className="col-span-1 md:col-span-2 border-t border-slate-100 mt-2 pt-4">
-                                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tổng mức đầu tư (Giá trị gói thầu) - VNĐ</label>
-                                                    <input type="text" name="tongMucDauTu" value={formData.tongMucDauTu} onChange={handleNumberChange} placeholder="VD: 15.000.000.000" className="w-full px-4 py-2 font-semibold text-[#00529c] border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#00529c] outline-none" />
-                                                    {formData.tongMucDauTu && (
-                                                        <p className="text-sm text-[#00529c] mt-2 italic bg-blue-50 p-2 rounded">
-                                                            <strong>Bằng chữ:</strong> {docTien(formData.tongMucDauTu)}
-                                                        </p>
-                                                    )}
-                                                </div>
-
-                                                {/* TÙY BIẾN 1 */}
-                                                {['Chỉ định thầu rút gọn', 'Dưới 50 triệu', 'Chào giá hạn chế', 'Chỉ định thầu rút gọn (Offline)'].includes(formData.hinhThucLCNT) && (
-                                                    <div className="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
-                                                        <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Nhà thầu</h3>
-                                                        <label className="block text-sm font-medium text-slate-700 mb-1">Tên Nhà thầu (hoặc dự kiến)</label>
-                                                        <input type="text" name="tenNhaThau" value={formData.tenNhaThau} onChange={handleInputChange} placeholder="VD: Công ty Cổ phần Xây dựng XYZ" className="w-full px-4 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" />
+                                            <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">3. Các trường dữ liệu linh động</h2>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                                {dynamicFields.map(field => (
+                                                    <div key={field} className="flex flex-col">
+                                                        <label className="text-sm font-semibold text-slate-700 mb-1">
+                                                            {/* Nếu có trong từ điển thì dịch ra Tiếng Việt, không thì in hoa chữ cái đầu */}
+                                                            {fieldDictionary[field] || field.charAt(0).toUpperCase() + field.slice(1)}
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            name={field}
+                                                            value={formData[field] || ''}
+                                                            onChange={handleInputChange}
+                                                            className="px-3 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#00529c] focus:border-transparent transition-all"
+                                                            placeholder={`Nhập ${fieldDictionary[field] ? fieldDictionary[field].toLowerCase() : field}...`}
+                                                        />
                                                     </div>
-                                                )}
-
-                                                {/* TÙY BIẾN 2 */}
-                                                {['Đấu thầu rộng rãi', 'Chào giá rộng rãi'].includes(formData.hinhThucLCNT) && (
-                                                    <div className="col-span-1 md:col-span-2 bg-amber-50 p-4 rounded-lg border border-amber-200 mt-2">
-                                                        <h3 className="text-sm font-bold text-amber-800 mb-3">✦ Thông tin dành riêng cho Đấu thầu</h3>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="block text-sm font-medium text-slate-700 mb-1">Phương thức LCNT</label>
-                                                                <select name="phuongThucLCNT" value={formData.phuongThucLCNT} onChange={handleInputChange} className="w-full px-4 py-2 border border-amber-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-amber-500">
-                                                                    <option value="Một giai đoạn một túi hồ sơ">Một giai đoạn một túi hồ sơ</option>
-                                                                    <option value="Một giai đoạn hai túi hồ sơ">Một giai đoạn hai túi hồ sơ</option>
-                                                                </select>
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-sm font-medium text-slate-700 mb-1">Giá trị Bảo đảm dự thầu (VNĐ)</label>
-                                                                <input type="text" name="soTienDamBaoDuThau" value={formData.soTienDamBaoDuThau} onChange={handleNumberChange} placeholder="VD: 15.000.000" className="w-full px-4 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
+                                                ))}
                                             </div>
+
+                                            {/* Thông báo thông minh khi chưa cấu hình biến */}
+                                            {dynamicFields.length === 0 && (
+                                                <div className="p-4 bg-yellow-50 text-yellow-700 rounded-md border border-yellow-200 mt-4">
+                                                    Chưa có trường dữ liệu (biến) nào được thiết lập cho giai đoạn này. Vui lòng cấu hình trên Google Sheets tại cột số 6 (cột F).
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* TAB 4: NGÀY THÁNG VĂN BẢN */}
@@ -934,15 +937,15 @@
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
                                                     ) : (
-                                                        <svg className={`w-4 h-4 mr-2 shrink-0 mt-0.5 ${(!doc.fileId || doc.fileId.trim() === '') && !formData.hinhThucLCNT.includes('(Offline)') ? 'text-red-400' : 'text-green-500 group-hover:text-[#00529c]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                        <svg className={`w-4 h-4 mr-2 shrink-0 mt-0.5 ${(!doc.fileId || doc.fileId.trim() === '') && formData.hinhThucLCNT && !formData.hinhThucLCNT.includes('(Offline)') ? 'text-red-400' : 'text-green-500 group-hover:text-[#00529c]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                                     )}
-                                                    <span className={`flex-1 font-medium transition-colors pr-6 ${(!doc.fileId || doc.fileId.trim() === '') && !formData.hinhThucLCNT.includes('(Offline)') ? 'text-red-400 line-through' : 'group-hover:text-[#00529c]'}`}>{doc.name}</span>
+                                                    <span className={`flex-1 font-medium transition-colors pr-6 ${(!doc.fileId || doc.fileId.trim() === '') && formData.hinhThucLCNT && !formData.hinhThucLCNT.includes('(Offline)') ? 'text-red-400 line-through' : 'group-hover:text-[#00529c]'}`}>{doc.name}</span>
                                                     
-                                                    {(!doc.fileId || doc.fileId.trim() === '') && !formData.hinhThucLCNT.includes('(Offline)') && (
+                                                    {(!doc.fileId || doc.fileId.trim() === '') && formData.hinhThucLCNT && !formData.hinhThucLCNT.includes('(Offline)') && (
                                                         <span className="absolute right-2 top-1.5 text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded font-bold">Thiếu ID</span>
                                                     )}
                                                     
-                                                    {((doc.fileId && doc.fileId.trim() !== '') || formData.hinhThucLCNT.includes('(Offline)')) && (
+                                                    {((doc.fileId && doc.fileId.trim() !== '') || (formData.hinhThucLCNT && formData.hinhThucLCNT.includes('(Offline)'))) && (
                                                         <svg className="w-4 h-4 text-transparent group-hover:text-[#00529c] ml-1 mt-0.5 transition-colors absolute right-2 top-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                                     )}
                                                 </li>
