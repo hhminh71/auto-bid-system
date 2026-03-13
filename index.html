@@ -110,16 +110,19 @@
             // 2. TẢI CONFIG VÀ DICTIONARY TỪ JSON
             // ==========================================
             React.useEffect(() => {
+                // Gọi API từ Worker (cửa /api/config trả về JSON)
                 fetch(`${WORKER_URL}/api/config`)
                     .then(res => {
                         if (!res.ok) throw new Error("Không thể kết nối với trạm Cloudflare");
-                        return res.json(); 
+                        return res.json(); // Đọc dữ liệu dạng JSON
                     })
                     .then(data => {
+                        // 1. XỬ LÝ TỪ ĐIỂN BIẾN (Tab TuDienBien)
                         if (data.dictionary) {
                             const dictRows = data.dictionary.split('\n').filter(r => r.trim());
                             const dictMap = {};
-                            for(let i = 1; i < dictRows.length; i++) {
+                            // Chạy từ dòng 1 bỏ qua tiêu đề
+                            for (let i = 1; i < dictRows.length; i++) {
                                 const cols = dictRows[i].split(',');
                                 if (cols.length >= 2) {
                                     dictMap[cols[0].trim()] = cols[1].trim();
@@ -128,6 +131,7 @@
                             setDictionary(dictMap);
                         }
 
+                        // 2. XỬ LÝ CẤU HÌNH BIỂU MẪU (Tab AutoDocs_Config)
                         if (data.config) {
                             const configRows = data.config.split('\n').filter(r => r.trim());
                             const newLogicTree = {};
@@ -141,6 +145,8 @@
                                 const id = cols[2].trim();
                                 const name = cols[3].trim();
                                 const fileId = cols[4].trim();
+                                
+                                // Đọc danh sách biến từ cột F (index 5), tách bằng dấu chấm phẩy
                                 const variables = cols[5] ? cols[5].split(';').map(v => v.trim()).filter(v => v) : [];
                                 
                                 if (!newLogicTree[hinhThuc]) newLogicTree[hinhThuc] = {};
@@ -151,6 +157,7 @@
                             
                             setLogicTree(newLogicTree);
                             
+                            // Tự động chọn giá trị mặc định cho Form
                             const firstHinhThuc = Object.keys(newLogicTree)[0];
                             if (firstHinhThuc) {
                                 const firstGiaiDoan = Object.keys(newLogicTree[firstHinhThuc])[0];
@@ -166,11 +173,13 @@
                     })
                     .catch(err => {
                         console.error("Lỗi khởi động:", err);
+                        // Hiển thị thông báo lỗi chi tiết
                         setSystemError(err.message);
                         setIsSystemLoading(false);
                     });
             }, []);
 
+            // HÀM BỎ QUA LỖI (Cứu hộ Offline)
             const handleBypassError = () => {
                 const fallbackTree = {
                     'Chỉ định thầu rút gọn': {
@@ -193,13 +202,22 @@
             const danhSachGiaiDoan = Object.keys(currentFormLogic);
             const currentDocs = currentFormLogic[formData.giaiDoanLCNT] || [];
 
+            // TÌM CÁC BIẾN CẦN THIẾT
             const requiredVariables = new Set();
             currentDocs.forEach(doc => {
                 if (doc.variables) {
                     doc.variables.forEach(v => requiredVariables.add(v));
                 }
             });
-            const dynamicFields = Array.from(requiredVariables);
+
+            // Lọc bỏ các biến đã được xử lý ở Tab "Ngày tháng Văn bản"
+            const dynamicFields = Array.from(requiredVariables).filter(v => {
+                // 1. Loại bỏ các biến bắt đầu bằng "so_" (Số văn bản)
+                // 2. Loại bỏ các biến bắt đầu bằng "ngay_" (Ngày tháng - bao gồm cả ngay_...Full, ngay_...Short...)
+                const isProcessedInTab2 = v.startsWith('so_') || v.startsWith('ngay_');
+                
+                return !isProcessedInTab2;
+            });
 
             const handleInputChange = (e) => {
                 const { name, value } = e.target;
@@ -254,7 +272,6 @@
             };
 
             const generateSingleDocument = async (docInfo) => {
-                // Đã gỡ bỏ bắt buộc nhập tenGoiThau
                 const isOffline = (!docInfo.fileId || docInfo.fileId.trim() === '');
                 setGeneratingDocId(docInfo.id); 
                 try {
@@ -289,7 +306,6 @@
                     doc.render(dataToRender); 
                     const docBlob = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
                     let cleanDocName = docInfo.name.replace(/^[0-9.]+\s*/, '');
-                    // Sử dụng tên dự phòng nếu tenGoiThau trống
                     const safeFileName = (formData.tenGoiThau || 'Tai_Lieu').replace(/\s+/g, '_');
                     saveAs(docBlob, `${cleanDocName}_${safeFileName}.docx`);
                 } catch (err) {
@@ -301,7 +317,6 @@
             };
 
             const generateDocument = async () => {
-                // Đã gỡ bỏ bắt buộc nhập tenGoiThau
                 setIsGenerating(true);
                 try {
                     if (typeof window.JSZip === 'undefined') throw new Error("Thư viện JSZip chưa tải xong.");
@@ -350,7 +365,6 @@
                     if (successCount === 0) throw new Error("Không tải được file nào.");
                     if (errorFiles.length > 0) alert(`Đã nén ${successCount} file. Các file lỗi:\n- ${errorFiles.join('\n- ')}`);
                     const content = await zipArchive.generateAsync({ type: "blob" });
-                    // Sử dụng tên dự phòng nếu tenGoiThau trống
                     const safeFileName = (formData.tenGoiThau || 'Tai_Lieu').replace(/\s+/g, '_');
                     saveAs(content, `Ho_So_${safeFileName}_${formData.giaiDoanLCNT.replace(/\s+/g, '')}.zip`);
                 } catch (error) { alert("Có lỗi xảy ra: " + error.message); } finally { setIsGenerating(false); }
