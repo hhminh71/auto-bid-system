@@ -107,22 +107,19 @@
             const fileInputRef = React.useRef(null);
 
             // ==========================================
-            // 2. TẢI CONFIG VÀ DICTIONARY TỪ JSON (THEO HƯỚNG DẪN MỚI)
+            // 2. TẢI CONFIG VÀ DICTIONARY TỪ JSON
             // ==========================================
             React.useEffect(() => {
-                // Gọi API từ Worker (cửa /api/config trả về JSON)
                 fetch(`${WORKER_URL}/api/config`)
                     .then(res => {
                         if (!res.ok) throw new Error("Không thể kết nối với trạm Cloudflare");
-                        return res.json(); // Đọc dữ liệu dạng JSON
+                        return res.json(); 
                     })
                     .then(data => {
-                        // 1. XỬ LÝ TỪ ĐIỂN BIẾN (Tab TuDienBien)
                         if (data.dictionary) {
                             const dictRows = data.dictionary.split('\n').filter(r => r.trim());
                             const dictMap = {};
-                            // Chạy từ dòng 1 bỏ qua tiêu đề
-                            for (let i = 1; i < dictRows.length; i++) {
+                            for(let i = 1; i < dictRows.length; i++) {
                                 const cols = dictRows[i].split(',');
                                 if (cols.length >= 2) {
                                     dictMap[cols[0].trim()] = cols[1].trim();
@@ -131,7 +128,6 @@
                             setDictionary(dictMap);
                         }
 
-                        // 2. XỬ LÝ CẤU HÌNH BIỂU MẪU (Tab AutoDocs_Config)
                         if (data.config) {
                             const configRows = data.config.split('\n').filter(r => r.trim());
                             const newLogicTree = {};
@@ -145,8 +141,6 @@
                                 const id = cols[2].trim();
                                 const name = cols[3].trim();
                                 const fileId = cols[4].trim();
-                                
-                                // Đọc danh sách biến từ cột F (index 5), tách bằng dấu chấm phẩy
                                 const variables = cols[5] ? cols[5].split(';').map(v => v.trim()).filter(v => v) : [];
                                 
                                 if (!newLogicTree[hinhThuc]) newLogicTree[hinhThuc] = {};
@@ -157,7 +151,6 @@
                             
                             setLogicTree(newLogicTree);
                             
-                            // Tự động chọn giá trị mặc định cho Form
                             const firstHinhThuc = Object.keys(newLogicTree)[0];
                             if (firstHinhThuc) {
                                 const firstGiaiDoan = Object.keys(newLogicTree[firstHinhThuc])[0];
@@ -173,13 +166,11 @@
                     })
                     .catch(err => {
                         console.error("Lỗi khởi động:", err);
-                        // Hiển thị thông báo lỗi chi tiết
                         setSystemError(err.message);
                         setIsSystemLoading(false);
                     });
             }, []);
 
-            // HÀM BỎ QUA LỖI (Cứu hộ Offline)
             const handleBypassError = () => {
                 const fallbackTree = {
                     'Chỉ định thầu rút gọn': {
@@ -202,7 +193,6 @@
             const danhSachGiaiDoan = Object.keys(currentFormLogic);
             const currentDocs = currentFormLogic[formData.giaiDoanLCNT] || [];
 
-            // TÌM CÁC BIẾN CẦN THIẾT
             const requiredVariables = new Set();
             currentDocs.forEach(doc => {
                 if (doc.variables) {
@@ -264,10 +254,7 @@
             };
 
             const generateSingleDocument = async (docInfo) => {
-                if (!formData.tenGoiThau) {
-                    alert("Vui lòng nhập Tên gói thầu trước khi tải biểu mẫu!");
-                    return;
-                }
+                // Đã gỡ bỏ bắt buộc nhập tenGoiThau
                 const isOffline = (!docInfo.fileId || docInfo.fileId.trim() === '');
                 setGeneratingDocId(docInfo.id); 
                 try {
@@ -276,7 +263,6 @@
                         response = await fetch('./' + docInfo.filename);
                         if (!response.ok) throw new Error(`Không tìm thấy file mẫu "${docInfo.filename}" trên GitHub.`);
                     } else {
-                        // Thêm tham số t để phá Cache
                         const proxyUrl = `${WORKER_URL}/?fileId=${docInfo.fileId}&t=${new Date().getTime()}`;
                         response = await fetch(proxyUrl);
                         if (!response.ok) throw new Error(`Cloudflare từ chối kết nối hoặc không tìm thấy file.`);
@@ -303,7 +289,9 @@
                     doc.render(dataToRender); 
                     const docBlob = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
                     let cleanDocName = docInfo.name.replace(/^[0-9.]+\s*/, '');
-                    saveAs(docBlob, `${cleanDocName}_${formData.tenGoiThau.replace(/\s+/g, '_')}.docx`);
+                    // Sử dụng tên dự phòng nếu tenGoiThau trống
+                    const safeFileName = (formData.tenGoiThau || 'Tai_Lieu').replace(/\s+/g, '_');
+                    saveAs(docBlob, `${cleanDocName}_${safeFileName}.docx`);
                 } catch (err) {
                     if (err.properties && err.properties.errors instanceof Array) {
                         const errorMessages = err.properties.errors.map(e => e.properties.explanation || e.message).join("\n");
@@ -313,10 +301,7 @@
             };
 
             const generateDocument = async () => {
-                if (!formData.tenGoiThau) {
-                    alert("Vui lòng nhập Tên gói thầu trước khi xuất file!");
-                    return;
-                }
+                // Đã gỡ bỏ bắt buộc nhập tenGoiThau
                 setIsGenerating(true);
                 try {
                     if (typeof window.JSZip === 'undefined') throw new Error("Thư viện JSZip chưa tải xong.");
@@ -365,7 +350,9 @@
                     if (successCount === 0) throw new Error("Không tải được file nào.");
                     if (errorFiles.length > 0) alert(`Đã nén ${successCount} file. Các file lỗi:\n- ${errorFiles.join('\n- ')}`);
                     const content = await zipArchive.generateAsync({ type: "blob" });
-                    saveAs(content, `Ho_So_${formData.tenGoiThau.replace(/\s+/g, '_')}_${formData.giaiDoanLCNT.replace(/\s+/g, '')}.zip`);
+                    // Sử dụng tên dự phòng nếu tenGoiThau trống
+                    const safeFileName = (formData.tenGoiThau || 'Tai_Lieu').replace(/\s+/g, '_');
+                    saveAs(content, `Ho_So_${safeFileName}_${formData.giaiDoanLCNT.replace(/\s+/g, '')}.zip`);
                 } catch (error) { alert("Có lỗi xảy ra: " + error.message); } finally { setIsGenerating(false); }
             };
 
@@ -436,6 +423,7 @@
                                     </div>
 
                                     <div className="p-6">
+                                        {/* TAB 1: CẤU HÌNH */}
                                         <div className={activeTab === 'cauhinh' ? 'block' : 'hidden'}>
                                             <h2 className="text-xl font-semibold mb-6 text-slate-700 border-b pb-2">1. Cấu hình quy trình xuất biểu mẫu</h2>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
