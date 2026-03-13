@@ -120,19 +120,17 @@
             React.useEffect(() => {
                 const loadConfigFromSheets = async () => {
                     try {
-                        // Gọi API đến Worker (Giả định endpoint trả JSON là /api/config)
-                        // LƯU Ý: Nếu Worker của bạn dùng route khác (vd: /config hoặc ở ngay thẻ gốc /), hãy sửa lại link dưới đây.
                         const response = await fetch(`${WORKER_URL}/api/config`);
                         
-                        if (!response.ok) throw new Error('Không thể kết nối đến máy chủ Cloudflare Worker.');
+                        if (!response.ok) throw new Error(`Mã lỗi từ Server: ${response.status} ${response.statusText}`);
                         
                         const data = await response.json();
                         
                         if (!Array.isArray(data) || data.length === 0) {
-                            throw new Error('Dữ liệu từ Google Sheets rỗng. Vui lòng kiểm tra lại bảng AutoDocs_Config.');
+                            throw new Error('Dữ liệu từ Google Sheets rỗng. Vui lòng kiểm tra lại bảng cấu hình.');
                         }
 
-                        // Parse dữ liệu từ Sheets (phẳng) thành dạng Cây rẽ nhánh (Logic Tree)
+                        // Parse dữ liệu từ Sheets (phẳng) thành dạng Cây rẽ nhánh
                         const newTree = {};
                         data.forEach(item => {
                             const { HinhThuc, GiaiDoan, MaBien, TenBieuMau, FileID } = item;
@@ -161,16 +159,41 @@
                             }));
                         }
 
-                        setIsSystemLoading(false); // Tắt màn hình loading
+                        setIsSystemLoading(false);
                     } catch (err) {
                         console.error("Lỗi khởi tạo hệ thống:", err);
-                        setSystemError(err.message);
+                        
+                        // XỬ LÝ HIỂN THỊ LỖI THÂN THIỆN HƠN NẾU BỊ CORS (Failed to fetch)
+                        if (err.message.includes('Failed to fetch')) {
+                            setSystemError('Lỗi kết nối (CORS) hoặc Mạng. Trạm Cloudflare Worker từ chối quyền truy cập hoặc đang bị lỗi nội bộ. Vui lòng kiểm tra lại cấu hình Headers CORS trên Worker.');
+                        } else {
+                            setSystemError(err.message);
+                        }
                         setIsSystemLoading(false);
                     }
                 };
 
                 loadConfigFromSheets();
             }, []);
+
+            // HÀM BỎ QUA LỖI ĐỂ DÙNG CẤU HÌNH MẶC ĐỊNH LƯU TRÚ (Cứu hộ khi đứt cáp/lỗi server)
+            const handleBypassError = () => {
+                const fallbackTree = {
+                    'Chỉ định thầu rút gọn (Offline)': {
+                        'Giai đoạn chuẩn bị': [
+                            { id: 'cdtrg_1', name: '01. Tờ trình phê duyệt Kế hoạch LCNT', filename: 'cdtrg_01_ToTrinh_KHLCNT.docx' },
+                            { id: 'cdtrg_2', name: '02. Quyết định phê duyệt KHLCNT', filename: 'cdtrg_02_QD_KHLCNT.docx' }
+                        ]
+                    }
+                };
+                setLogicTree(fallbackTree);
+                setFormData(prev => ({
+                    ...prev,
+                    hinhThucLCNT: 'Chỉ định thầu rút gọn (Offline)',
+                    giaiDoanLCNT: 'Giai đoạn chuẩn bị'
+                }));
+                setSystemError(null);
+            };
 
             // Xác định danh sách biểu mẫu hiện tại dựa trên dropdown
             const currentFormLogic = logicTree[formData.hinhThucLCNT] || {};
@@ -253,7 +276,6 @@
                 setGeneratingDocId(docInfo.id); 
 
                 try {
-                    // CẬP NHẬT ĐƯỜNG DẪN QUA TRẠM WORKER (Route giả định: /api/download?id= )
                     const response = await fetch(`${WORKER_URL}/api/download?id=${docInfo.fileId}`);
                     
                     if (!response.ok) {
@@ -333,7 +355,6 @@
                                 continue;
                             }
 
-                            // KÉO QUA CLOUDFLARE WORKER
                             const response = await fetch(`${WORKER_URL}/api/download?id=${docInfo.fileId}`);
                             if (!response.ok) {
                                 errorFiles.push(`${docInfo.name} (Lỗi Cloudflare)`);
@@ -428,7 +449,10 @@
                             </div>
                             <h2 className="text-xl font-bold text-slate-800 mb-2">Lỗi Khởi động Hệ thống</h2>
                             <p className="text-slate-600 text-sm mb-6 leading-relaxed bg-red-50 p-3 rounded">{systemError}</p>
-                            <button onClick={() => window.location.reload()} className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md w-full">Thử tải lại trang</button>
+                            <div className="flex flex-col space-y-3">
+                                <button onClick={() => window.location.reload()} className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md w-full">Thử tải lại trang</button>
+                                <button onClick={handleBypassError} className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-2.5 rounded-lg font-medium transition-colors w-full">Bỏ qua & Dùng Cấu hình Offline</button>
+                            </div>
                         </div>
                     </div>
                 );
@@ -540,7 +564,7 @@
                                                     </select>
                                                 </div>
                                                 
-                                                {/* DANH SÁCH BIỂU MẪU TỰ ĐỘNG CẬP NHẬT */}
+                                                {/* DANH SÁCH BIỂU MẪU TỰ ĐỘNG CẬP NHẬT TRONG TAB CẤU HÌNH - HỖ TRỢ CLICK TẢI LẺ */}
                                                 <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                                                     <h3 className="text-md font-bold text-slate-700 mb-3 flex items-center">
                                                         <svg className="w-5 h-5 mr-2 text-[#00529c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
