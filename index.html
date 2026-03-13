@@ -424,7 +424,16 @@
 
                 } catch (err) {
                     console.error(`Lỗi tạo file lẻ ${docInfo.name}:`, err);
-                    alert(err.message);
+                    
+                    // NẾU LÀ LỖI MULTI ERROR CỦA DOCXTEMPLATER
+                    if (err.properties && err.properties.errors instanceof Array) {
+                        const errorMessages = err.properties.errors.map(function (e) {
+                            return e.properties.explanation || e.message;
+                        }).join("\n");
+                        alert("Lỗi cú pháp trong file Word mẫu:\n" + errorMessages);
+                    } else {
+                        alert("Lỗi: " + err.message);
+                    }
                 } finally {
                     setGeneratingDocId(null); 
                 }
@@ -514,6 +523,16 @@
 
                         } catch (err) {
                             console.error(`Lỗi khi xử lý file ${docInfo.name}:`, err);
+                            
+                            // BẮT LỖI MULTI ERROR CHO HÀM TẢI ZIP ĐỂ BÁO CÁO Ở CUỐI CÙNG
+                            if (err.properties && err.properties.errors instanceof Array) {
+                                const errorMessages = err.properties.errors.map(function (e) {
+                                    return e.properties.explanation || e.message;
+                                }).join("; ");
+                                errorFiles.push(`${docInfo.name} (Lỗi thẻ Word: ${errorMessages})`);
+                            } else {
+                                errorFiles.push(`${docInfo.name} (Lỗi: ${err.message})`);
+                            }
                         }
                     }
 
