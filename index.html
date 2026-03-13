@@ -18,9 +18,6 @@
     <!-- THƯ VIỆN NÉN FILE ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-
-    <!-- GỌI FILE CẤU HÌNH BÊN NGOÀI VÀO -->
-    <script src="./config.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
     <div id="root"></div>
@@ -85,7 +82,17 @@
         };
 
         const App = () => {
-            // 1. BIẾN QUẢN LÝ DỮ LIỆU
+            // ==========================================
+            // 1. CẤU HÌNH API CLOUDFLARE WORKER
+            // ==========================================
+            const WORKER_URL = 'https://autodocs-proxy.hhminh71.workers.dev';
+            
+            // STATE QUẢN LÝ QUÁ TRÌNH TẢI HỆ THỐNG
+            const [logicTree, setLogicTree] = React.useState({});
+            const [isSystemLoading, setIsSystemLoading] = React.useState(true);
+            const [systemError, setSystemError] = React.useState(null);
+
+            // STATE QUẢN LÝ DỮ LIỆU FORM
             const [formData, setFormData] = React.useState({
                 tenDuAn: '',
                 chuDauTu: '',
@@ -93,14 +100,13 @@
                 tongMucDauTu: '',
                 soQuyetDinhDA: '',
                 tenGoiThau: '',
-                hinhThucLCNT: 'Chỉ định thầu rút gọn', 
-                giaiDoanLCNT: 'Giai đoạn chuẩn bị', 
+                hinhThucLCNT: '', 
+                giaiDoanLCNT: '', 
                 loaiHopDong: 'Trọn gói',
                 thoiGianThucHien: '', 
                 tenNhaThau: '', 
                 phuongThucLCNT: 'Một giai đoạn một túi hồ sơ', 
                 soTienDamBaoDuThau: ''
-                // Các biến Số và Ngày tháng giờ sẽ được lưu động (dynamic) theo ID văn bản
             });
 
             const [activeTab, setActiveTab] = React.useState('cauhinh'); 
@@ -108,15 +114,72 @@
             const [generatingDocId, setGeneratingDocId] = React.useState(null);
             const fileInputRef = React.useRef(null);
 
-            // 2. LẤY CẤU HÌNH TỪ FILE BÊN NGOÀI (config.js)
-            const logicTree = window.APP_CONFIG || {};
+            // ==========================================
+            // 2. TỰ ĐỘNG TẢI CONFIG TỪ GOOGLE SHEETS
+            // ==========================================
+            React.useEffect(() => {
+                const loadConfigFromSheets = async () => {
+                    try {
+                        // Gọi API đến Worker (Giả định endpoint trả JSON là /api/config)
+                        // LƯU Ý: Nếu Worker của bạn dùng route khác (vd: /config hoặc ở ngay thẻ gốc /), hãy sửa lại link dưới đây.
+                        const response = await fetch(`${WORKER_URL}/api/config`);
+                        
+                        if (!response.ok) throw new Error('Không thể kết nối đến máy chủ Cloudflare Worker.');
+                        
+                        const data = await response.json();
+                        
+                        if (!Array.isArray(data) || data.length === 0) {
+                            throw new Error('Dữ liệu từ Google Sheets rỗng. Vui lòng kiểm tra lại bảng AutoDocs_Config.');
+                        }
 
-            // Xác định danh sách file hiển thị ở giao diện DỰA VÀO LỰA CHỌN
-            const currentFormLogic = logicTree[formData.hinhThucLCNT] || logicTree['Chỉ định thầu rút gọn'] || {};
+                        // Parse dữ liệu từ Sheets (phẳng) thành dạng Cây rẽ nhánh (Logic Tree)
+                        const newTree = {};
+                        data.forEach(item => {
+                            const { HinhThuc, GiaiDoan, MaBien, TenBieuMau, FileID } = item;
+                            if (!HinhThuc || !GiaiDoan) return;
+                            
+                            if (!newTree[HinhThuc]) newTree[HinhThuc] = {};
+                            if (!newTree[HinhThuc][GiaiDoan]) newTree[HinhThuc][GiaiDoan] = [];
+                            
+                            newTree[HinhThuc][GiaiDoan].push({
+                                id: MaBien,
+                                name: TenBieuMau,
+                                fileId: FileID
+                            });
+                        });
+                        
+                        setLogicTree(newTree);
+                        
+                        // Set dropdown về tùy chọn đầu tiên
+                        const firstHinhThuc = Object.keys(newTree)[0];
+                        if (firstHinhThuc) {
+                            const firstGiaiDoan = Object.keys(newTree[firstHinhThuc])[0];
+                            setFormData(prev => ({
+                                ...prev,
+                                hinhThucLCNT: firstHinhThuc,
+                                giaiDoanLCNT: firstGiaiDoan
+                            }));
+                        }
+
+                        setIsSystemLoading(false); // Tắt màn hình loading
+                    } catch (err) {
+                        console.error("Lỗi khởi tạo hệ thống:", err);
+                        setSystemError(err.message);
+                        setIsSystemLoading(false);
+                    }
+                };
+
+                loadConfigFromSheets();
+            }, []);
+
+            // Xác định danh sách biểu mẫu hiện tại dựa trên dropdown
+            const currentFormLogic = logicTree[formData.hinhThucLCNT] || {};
             const danhSachGiaiDoan = Object.keys(currentFormLogic);
             const currentDocs = currentFormLogic[formData.giaiDoanLCNT] || [];
 
-            // HÀM XỬ LÝ KHI NHẬP/CHỌN DỮ LIỆU THAY ĐỔI
+            // ==========================================
+            // 3. CÁC HÀM XỬ LÝ SỰ KIỆN FORM
+            // ==========================================
             const handleInputChange = (e) => {
                 const { name, value } = e.target;
                 
@@ -124,10 +187,8 @@
                     const newData = { ...prevData, [name]: value };
                     
                     if (name === 'hinhThucLCNT') {
-                        const availablePhases = Object.keys(logicTree[value] || logicTree['Chỉ định thầu rút gọn'] || {});
-                        if(availablePhases.length > 0) {
-                            newData.giaiDoanLCNT = availablePhases[0];
-                        }
+                        const availablePhases = Object.keys(logicTree[value] || {});
+                        newData.giaiDoanLCNT = availablePhases.length > 0 ? availablePhases[0] : '';
                     }
                     
                     return newData;
@@ -138,10 +199,7 @@
                 const { name, value } = e.target;
                 let rawValue = value.replace(/\D/g, ''); 
                 let formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, "."); 
-                setFormData({
-                    ...formData,
-                    [name]: formattedValue
-                });
+                setFormData({ ...formData, [name]: formattedValue });
             };
 
             const handleExportData = () => {
@@ -178,19 +236,28 @@
                 e.target.value = null; 
             };
 
-            // HÀM TẠO FILE LẺ
+            // ==========================================
+            // 4. HÀM TẢI FILE TỪ CLOUDFLARE WORKER
+            // ==========================================
             const generateSingleDocument = async (docInfo) => {
                 if (!formData.tenDuAn || !formData.tenGoiThau) {
                     alert("Vui lòng nhập Tên dự án và Tên gói thầu trước khi tải biểu mẫu!");
                     return;
                 }
 
+                if (!docInfo.fileId || docInfo.fileId.trim() === '') {
+                    alert(`LỖI: Biểu mẫu "${docInfo.name}" chưa được cấu hình File ID trên Google Sheets! Vui lòng cập nhật File ID.`);
+                    return;
+                }
+
                 setGeneratingDocId(docInfo.id); 
 
                 try {
-                    const response = await fetch('./' + docInfo.filename);
+                    // CẬP NHẬT ĐƯỜNG DẪN QUA TRẠM WORKER (Route giả định: /api/download?id= )
+                    const response = await fetch(`${WORKER_URL}/api/download?id=${docInfo.fileId}`);
+                    
                     if (!response.ok) {
-                        throw new Error(`Không tìm thấy file mẫu "${docInfo.filename}" trên GitHub. Vui lòng kiểm tra lại tên file.`);
+                        throw new Error(`Cloudflare từ chối kết nối hoặc không tìm thấy file có ID: ${docInfo.fileId}`);
                     }
                     const arrayBuffer = await response.arrayBuffer();
                     
@@ -198,7 +265,7 @@
                     try {
                         zip = new window.PizZip(arrayBuffer);
                     } catch (zipError) {
-                        throw new Error(`Tải thất bại! File "${docInfo.filename}" bị lỗi hoặc không phải định dạng Word (.docx).`);
+                        throw new Error(`Tải thất bại! Dữ liệu trả về từ Google Drive không phải là file Word (.docx) hợp lệ.`);
                     }
 
                     const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
@@ -232,7 +299,7 @@
                     saveAs(docBlob, `${cleanDocName}_${formData.tenGoiThau.replace(/\s+/g, '_')}.docx`);
 
                 } catch (err) {
-                    console.error(`Lỗi khi tạo file lẻ ${docInfo.filename}:`, err);
+                    console.error(`Lỗi tạo file lẻ ${docInfo.name}:`, err);
                     alert(err.message);
                 } finally {
                     setGeneratingDocId(null); 
@@ -253,9 +320,7 @@
                     }
 
                     const currentDocsToGen = currentDocs; 
-                    if (currentDocsToGen.length === 0) {
-                        throw new Error(`Chưa có biểu mẫu nào được cấu hình cho phần ${formData.hinhThucLCNT} - ${formData.giaiDoanLCNT}.`);
-                    }
+                    if (currentDocsToGen.length === 0) return;
 
                     const zipArchive = new window.JSZip();
                     let successCount = 0;
@@ -263,9 +328,15 @@
                     
                     for (const docInfo of currentDocsToGen) {
                         try {
-                            const response = await fetch('./' + docInfo.filename);
+                            if (!docInfo.fileId || docInfo.fileId.trim() === '') {
+                                errorFiles.push(`${docInfo.name} (Thiếu File ID)`);
+                                continue;
+                            }
+
+                            // KÉO QUA CLOUDFLARE WORKER
+                            const response = await fetch(`${WORKER_URL}/api/download?id=${docInfo.fileId}`);
                             if (!response.ok) {
-                                errorFiles.push(docInfo.filename);
+                                errorFiles.push(`${docInfo.name} (Lỗi Cloudflare)`);
                                 continue; 
                             }
                             const arrayBuffer = await response.arrayBuffer();
@@ -274,7 +345,7 @@
                             try {
                                 zip = new window.PizZip(arrayBuffer);
                             } catch (e) {
-                                errorFiles.push(docInfo.filename);
+                                errorFiles.push(`${docInfo.name} (Sai định dạng Docx)`);
                                 continue;
                             }
 
@@ -309,16 +380,16 @@
                             successCount++;
 
                         } catch (err) {
-                            console.error(`Lỗi khi xử lý file ${docInfo.filename}:`, err);
+                            console.error(`Lỗi khi xử lý file ${docInfo.name}:`, err);
                         }
                     }
 
                     if (successCount === 0) {
-                        throw new Error("Không tải được file nào. Đảm bảo bạn đã upload các file Word có tên chính xác lên GitHub.");
+                        throw new Error("Không thể tải được bất kỳ file nào. Vui lòng kiểm tra lại kết nối hoặc dữ liệu File ID trên Google Sheets.");
                     }
 
                     if (errorFiles.length > 0) {
-                        alert(`Đã nén thành công ${successCount} file.\n\nTuy nhiên, các file sau bị bỏ qua do chưa có trên GitHub hoặc sai định dạng:\n- ${errorFiles.join('\n- ')}`);
+                        alert(`Đã nén thành công ${successCount} file.\n\nTuy nhiên, các file sau bị bỏ qua do lỗi tải hoặc cấu hình:\n- ${errorFiles.join('\n- ')}`);
                     }
 
                     const content = await zipArchive.generateAsync({ type: "blob" });
@@ -332,24 +403,43 @@
                 }
             };
 
-            // Nếu không tìm thấy file cấu hình
-            if (!window.APP_CONFIG || Object.keys(logicTree).length === 0) {
+            // ==========================================
+            // MÀN HÌNH CHỜ (LOADING) ĐẸP MẮT
+            // ==========================================
+            if (isSystemLoading) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                        <div className="bg-white p-8 rounded-xl shadow text-center max-w-md border border-red-200">
-                            <h2 className="text-xl font-bold text-red-600 mb-4">Lỗi tải cấu hình!</h2>
-                            <p className="text-slate-600 mb-4">Không tìm thấy file <strong>config.js</strong>. Vui lòng đảm bảo bạn đã tạo file này trên GitHub theo hướng dẫn.</p>
-                            <p className="text-sm bg-slate-100 p-3 rounded">Lưu ý: Nếu bạn đang chạy trực tiếp file HTML trên máy tính thay vì máy chủ, trình duyệt có thể chặn file này do lỗi CORS.</p>
+                    <div className="min-h-screen bg-[#00529c] flex flex-col items-center justify-center p-4 shadow-inner">
+                        <svg className="animate-spin h-14 w-14 text-white mb-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-widest mb-3 text-center drop-shadow-md uppercase">HỆ THỐNG AUTODOCS MUA SẮM</h1>
+                        <p className="text-blue-200 text-sm md:text-base text-center animate-pulse">Đang đồng bộ cấu hình từ Google Sheets qua trạm Cloudflare...</p>
+                    </div>
+                );
+            }
+
+            if (systemError) {
+                return (
+                    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+                        <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md border-t-4 border-red-500">
+                            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4 shadow-inner">
+                                <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-800 mb-2">Lỗi Khởi động Hệ thống</h2>
+                            <p className="text-slate-600 text-sm mb-6 leading-relaxed bg-red-50 p-3 rounded">{systemError}</p>
+                            <button onClick={() => window.location.reload()} className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors shadow-md w-full">Thử tải lại trang</button>
                         </div>
                     </div>
                 );
             }
 
+            // MÀN HÌNH GIAO DIỆN CHÍNH
             return (
                 <div className="min-h-screen p-4 md:p-8">
                     <div className="max-w-6xl mx-auto">
                         
-                        {/* HEADER MỚI CHUẨN BRANDING ACV CẦN THƠ */}
+                        {/* HEADER BRANDING ACV CẦN THƠ */}
                         <header className="mb-8 bg-[#00529c] rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row md:items-end justify-between border-b-[5px] border-[#d4a026]">
                             <div className="p-6 md:pb-6">
                                 <h2 className="text-[12px] md:text-[13px] font-medium text-blue-100 mb-1 uppercase tracking-wide">
@@ -450,7 +540,7 @@
                                                     </select>
                                                 </div>
                                                 
-                                                {/* DANH SÁCH BIỂU MẪU TỰ ĐỘNG CẬP NHẬT TRONG TAB CẤU HÌNH - HỖ TRỢ CLICK TẢI LẺ */}
+                                                {/* DANH SÁCH BIỂU MẪU TỰ ĐỘNG CẬP NHẬT */}
                                                 <div className="col-span-1 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                                                     <h3 className="text-md font-bold text-slate-700 mb-3 flex items-center">
                                                         <svg className="w-5 h-5 mr-2 text-[#00529c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -462,19 +552,24 @@
                                                                 <li 
                                                                     key={doc.id} 
                                                                     onClick={() => generateSingleDocument(doc)}
-                                                                    className="flex items-start text-sm bg-slate-50 text-slate-700 p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-300 hover:text-[#00529c] transition-colors group"
+                                                                    className="flex items-start text-sm bg-slate-50 text-slate-700 p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-300 hover:text-[#00529c] transition-colors group relative overflow-hidden"
                                                                     title="Nhấn để tải và trộn dữ liệu riêng file này"
                                                                 >
+                                                                    {/* Báo lỗi đỏ nếu thiếu FileID */}
+                                                                    {(!doc.fileId || doc.fileId.trim() === '') && (
+                                                                         <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-bl-lg font-bold">Thiếu ID</span>
+                                                                    )}
+                                                                    
                                                                     {generatingDocId === doc.id ? (
-                                                                        <svg className="animate-spin h-5 w-5 text-blue-500 mr-2 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                        <svg className="animate-spin h-5 w-5 text-[#00529c] mr-2 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                                         </svg>
                                                                     ) : (
-                                                                        <svg className="w-5 h-5 text-[#00529c] mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                                        <svg className={`w-5 h-5 mr-2 shrink-0 ${(!doc.fileId || doc.fileId.trim() === '') ? 'text-red-400' : 'text-[#00529c]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                                                     )}
-                                                                    <span className="font-medium flex-1">{doc.name}</span>
-                                                                    <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-500 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                                    <span className="font-medium flex-1 pr-4">{doc.name}</span>
+                                                                    <svg className="w-4 h-4 text-slate-400 group-hover:text-[#00529c] ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                                                 </li>
                                                             ))}
                                                         </ul>
@@ -543,7 +638,7 @@
                                                     )}
                                                 </div>
 
-                                                {/* TÙY BIẾN 1: Tên nhà thầu áp dụng cho các hình thức hạn chế */}
+                                                {/* TÙY BIẾN 1 */}
                                                 {['Chỉ định thầu rút gọn', 'Dưới 50 triệu', 'Chào giá hạn chế'].includes(formData.hinhThucLCNT) && (
                                                     <div className="col-span-1 md:col-span-2 bg-green-50 p-4 rounded-lg border border-green-200 mt-2">
                                                         <h3 className="text-sm font-bold text-green-800 mb-2">✦ Thông tin dành riêng cho Nhà thầu</h3>
@@ -552,7 +647,7 @@
                                                     </div>
                                                 )}
 
-                                                {/* TÙY BIẾN 2: Phương thức LCNT cho các hình thức mở rộng */}
+                                                {/* TÙY BIẾN 2 */}
                                                 {['Đấu thầu rộng rãi', 'Chào giá rộng rãi'].includes(formData.hinhThucLCNT) && (
                                                     <div className="col-span-1 md:col-span-2 bg-amber-50 p-4 rounded-lg border border-amber-200 mt-2">
                                                         <h3 className="text-sm font-bold text-amber-800 mb-3">✦ Thông tin dành riêng cho Đấu thầu</h3>
@@ -575,7 +670,7 @@
                                             </div>
                                         </div>
 
-                                        {/* TAB 4: NGÀY THÁNG VĂN BẢN (THIẾT KẾ ĐỘNG MỚI) */}
+                                        {/* TAB 4: NGÀY THÁNG VĂN BẢN */}
                                         <div className={activeTab === 'cancu' ? 'block' : 'hidden'}>
                                             <h2 className="text-xl font-semibold mb-2 text-slate-700 border-b pb-2">4. Ngày tháng & Số hiệu Văn bản</h2>
                                             <p className="text-sm text-slate-500 mb-6">Nhập Số và Ngày tháng cho toàn bộ các văn bản thuộc quy trình <strong>{formData.hinhThucLCNT}</strong>. Các thông tin này sẽ tự động liên kết làm căn cứ cho các bước sau.</p>
@@ -589,9 +684,11 @@
                                                         <div className="p-4 space-y-4">
                                                             {phaseDocs.map(doc => (
                                                                 <div key={doc.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center pb-4 border-b border-slate-100 last:border-0 last:pb-0">
-                                                                    <div className="md:col-span-6 font-medium text-sm text-slate-800 leading-snug">
-                                                                        {doc.name}
-                                                                        <span className="block text-xs text-slate-400 font-normal mt-1">(Mã biến: {doc.id})</span>
+                                                                    <div className="md:col-span-6 font-medium text-sm text-slate-800 leading-snug flex items-center">
+                                                                        <div className="flex-1">
+                                                                            {doc.name}
+                                                                            <span className="block text-xs text-slate-400 font-normal mt-1">(Mã biến: {doc.id})</span>
+                                                                        </div>
                                                                     </div>
                                                                     <div className="md:col-span-3">
                                                                         <input 
@@ -664,7 +761,7 @@
                                     <h3 className="font-bold text-[#00529c] mb-2 text-lg">Đóng gói Hồ sơ</h3>
                                     <p className="text-sm text-slate-600 mb-4">
                                         Hệ thống sẽ trộn dữ liệu vào <strong>{currentDocs.length} biểu mẫu</strong> 
-                                        <br/>(của hình thức <span className="font-semibold text-slate-800">{formData.hinhThucLCNT}</span> - <span className="font-semibold text-slate-800">{formData.giaiDoanLCNT}</span>). Nhấn vào tên 1 file để tải lẻ, hoặc nhấn nút xanh dưới cùng để tải file .ZIP.
+                                        <br/>(của hình thức <span className="font-semibold text-slate-800">{formData.hinhThucLCNT}</span> - <span className="font-semibold text-slate-800">{formData.giaiDoanLCNT}</span>). Nhấn vào tên 1 file để tải lẻ, hoặc nhấn nút dưới cùng để tải file .ZIP.
                                     </p>
                                     
                                     {currentDocs.length > 0 ? (
@@ -673,19 +770,26 @@
                                                 <li 
                                                     key={doc.id} 
                                                     onClick={() => generateSingleDocument(doc)}
-                                                    className="flex items-start cursor-pointer group p-1.5 -mx-1.5 rounded hover:bg-blue-50 transition-colors"
+                                                    className="flex items-start cursor-pointer group p-1.5 -mx-1.5 rounded hover:bg-blue-50 transition-colors relative"
                                                     title="Nhấn để tải riêng file này"
                                                 >
                                                     {generatingDocId === doc.id ? (
-                                                        <svg className="animate-spin h-4 w-4 text-blue-500 mr-2 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <svg className="animate-spin h-4 w-4 text-[#00529c] mr-2 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
                                                     ) : (
-                                                        <svg className="w-4 h-4 text-green-500 mr-2 shrink-0 mt-0.5 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                        <svg className={`w-4 h-4 mr-2 shrink-0 mt-0.5 ${(!doc.fileId || doc.fileId.trim() === '') ? 'text-red-400' : 'text-green-500 group-hover:text-[#00529c]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                                     )}
-                                                    <span className="flex-1 group-hover:text-[#00529c] font-medium transition-colors">{doc.name}</span>
-                                                    <svg className="w-4 h-4 text-transparent group-hover:text-[#00529c] ml-1 mt-0.5 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                    <span className={`flex-1 font-medium transition-colors pr-6 ${(!doc.fileId || doc.fileId.trim() === '') ? 'text-red-400 line-through' : 'group-hover:text-[#00529c]'}`}>{doc.name}</span>
+                                                    
+                                                    {(!doc.fileId || doc.fileId.trim() === '') && (
+                                                        <span className="absolute right-2 top-1.5 text-[9px] bg-red-100 text-red-600 px-1 py-0.5 rounded font-bold">Thiếu ID</span>
+                                                    )}
+                                                    
+                                                    {(doc.fileId && doc.fileId.trim() !== '') && (
+                                                        <svg className="w-4 h-4 text-transparent group-hover:text-[#00529c] ml-1 mt-0.5 transition-colors absolute right-2 top-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                    )}
                                                 </li>
                                             ))}
                                         </ul>
